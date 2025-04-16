@@ -14,11 +14,15 @@ Reimplementation of *SOFTS: Efficient Multivariate Time Series Forecasting with 
 ## Introduction
 
 - **Problem Definition:**  
-  *What problem are you trying to solve and why?*
+  - *Implementing an existing paper: describe the paper's objectives and reasons for choosing this paper.*
+  - Objectives: Effectively integrating the robustness of channel independence and utilizing the correlation between channels in a simpler and more efficient manner is crucial for building better time series forecasting models.
+  - The paper makes the following 3 contributions:
+      1.  Presents Series-cOre Fused Time Series (SOFTS) forecaster, a a simple MLP-based model that demonstrates state-of-the-art performance with lower complexity.
+      2.  Introduces the  STar Aggregate-Redistribute (STAR) module, which serves as the foundation of SOFTS. STAR is designed as a centralized structure that uses a core to aggregate and exchange information from the channels. Compared to distributed structures like attention, the STAR not only reduces the complexity but also improves robustness against anomalies in channels.
+      3.  Through extensive experiments, the effectiveness and scalability of SOFTS are validated. The universality of STAR is also validated on various attention-based time series forecasters.
 
-  - If implementing an existing paper: describe the paper's objectives and reasons for choosing this paper.
-  - If doing something new: detail your motivation and how you arrived at this topic.
-  - Clearly state the type of problem (Classification, Regression, Structured prediction, Reinforcement Learning, Unsupervised Learning, etc.).
+  - *Clearly state the type of problem (Classification, Regression, Structured prediction, Reinforcement Learning, Unsupervised Learning, etc.).*
+  - This problem, time series forecasting, is primarily a supervised learning problem, typically formulated as a regression task.
 
 ## Related Work
 
