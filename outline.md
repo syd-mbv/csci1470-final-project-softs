@@ -27,18 +27,35 @@ Reimplementation of *SOFTS: Efficient Multivariate Time Series Forecasting with 
 ## Related Work
 
 - **Literature Review:**
-  - Briefly summarize (one paragraph) at least one relevant paper/article/blog beyond the paper you are implementing or the novel idea you're researching.
+  - *Briefly summarize (one paragraph) at least one relevant paper/article/blog beyond the paper you are implementing or the novel idea you're researching.*
+  - The researchers used this method as it is adapted from ITRANSFORMER paper, to consider normalization as a hyperparameter. Reversible Instance Normalization in iTransformer simply applies attention and feed-forward networks on the inverted dimensions, enabling the model to capture multivariate correlations and learn nonlinear representations effectively.
 
 - **References and Implementations:**
   - Include URLs to any public implementations you find relevant.
   - *(Treat this as a "living list" and update it as you find new resources.)*
+  - ITRANSFORMER:
+    - Paper: https://arxiv.org/abs/2310.06625
+    - Code repository: https://github.com/thuml/iTransformer
 
 ## Data
 
 - **Dataset Description:**
-  - Brief description (if standard dataset like MNIST, briefly mention; otherwise, explain source and collection method).
-  - Size of the dataset.
-  - Discuss preprocessing requirements (if any).
+  - *Brief description (if standard dataset like MNIST, briefly mention; otherwise, explain source and collection method).*
+  - *Size of the dataset.*
+  - *Discuss preprocessing requirements (if any).*
+  - Datasets from the paper:
+    - Electricity
+    - ETT-small
+    - PEMS
+    - Solar
+    - Traffic
+    - Weather
+  - ETT(Electricity Transformer Temperature) comprises two hourly-level datasets (ETTh) and two 15-minute-level datasets (ETTm). Each dataset contains seven oil and load features of electricity transformers from July 2016 to July 2018.
+  - Traffic describes the road occupancy rates. It contains the hourly data recorded by the sensors of San Francisco freeways from 2015 to 2016.
+  - Electricity collects the hourly electricity consumption of 321 clients from 2012 to 2014.
+  - Weather r includes 21 indicators of weather, such as air temperature, and humidity. Its data is recorded every 10 min for 2020 in Germany.
+  - Solar-Energy records the solar power production of 137 PV plants in 2006, which is sampled every 10 minutes.
+  - PEMS contains public traffic network data in California collected by 5-minute windows.
 
 ## Metrics
 
