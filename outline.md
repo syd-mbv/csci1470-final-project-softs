@@ -43,19 +43,32 @@ Reimplementation of *SOFTS: Efficient Multivariate Time Series Forecasting with 
   - *Brief description (if standard dataset like MNIST, briefly mention; otherwise, explain source and collection method).*
   - *Size of the dataset.*
   - *Discuss preprocessing requirements (if any).*
-  - Datasets from the paper:
+  - Datasets used in the paper: https://drive.google.com/drive/folders/1QPM7MMKlzVffdzbGGkzARDuIqiYRed_f
     - Electricity
     - ETT-small
     - PEMS
     - Solar
     - Traffic
     - Weather
-  - ETT(Electricity Transformer Temperature) comprises two hourly-level datasets (ETTh) and two 15-minute-level datasets (ETTm). Each dataset contains seven oil and load features of electricity transformers from July 2016 to July 2018.
-  - Traffic describes the road occupancy rates. It contains the hourly data recorded by the sensors of San Francisco freeways from 2015 to 2016.
-  - Electricity collects the hourly electricity consumption of 321 clients from 2012 to 2014.
+  - ETT(Electricity Transformer Temperature) comprises two hourly-level datasets (ETTh) and two 15-minute-level datasets (ETTm). Each dataset contains seven oil and load features of electricity transformers from July 2016 to July 2018. https://github.com/zhouhaoyi/ETDataset
+  - Traffic describes the road occupancy rates. It contains the hourly data recorded by the sensors of San Francisco freeways from 2015 to 2016. https://pems.dot.ca.gov/
+  - Electricity collects the hourly electricity consumption of 321 clients from 2012 to 2014. https://archive.ics.uci.edu/dataset/321/electricityloaddiagrams20112014
   - Weather r includes 21 indicators of weather, such as air temperature, and humidity. Its data is recorded every 10 min for 2020 in Germany.
   - Solar-Energy records the solar power production of 137 PV plants in 2006, which is sampled every 10 minutes.
-  - PEMS contains public traffic network data in California collected by 5-minute windows.
+  - PEMS contains public traffic network data in California collected by 5-minute windows. https://pems.dot.ca.gov/
+- Size of the dataset:
+  |   Dataset  |  Channels | Dataset Split | Size(MB) |
+  |:-------:|:--------:|:--------:|:--------:|
+  | ETTh1, ETTh2 | 7 | (8545, 2881, 2881) | 2.5, 2.3 |
+  | ETTm1, ETTm2 | 7 | (34465, 11521, 11521) | 9.9, 9.2 |
+  | Weather  | 21 | (36792, 5271, 10540) | 6.9 |
+  | ECL  | 321 | (18317, 2633, 5261) | 91.1 |
+  | Traffic  | 862 | (12185, 1757, 3509) | 130 |
+  | Solar-Energy | 137 | (36601, 5161, 10417) | 171 |
+  | PEMS03 | 358 | (15617,5135,5135) | 15.0 |
+  | PEMS04 | 307 | (10172,3375,3375) | 31.4 |
+  | PEMS07 | 883 | (16911,5622,5622) | 41.6 |
+  | PEMS08 | 170 | (10690,3548,3548) | 17.6 |
 
 ## Metrics
 
