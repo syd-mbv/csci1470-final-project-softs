@@ -73,27 +73,49 @@ Reimplementation of *SOFTS: Efficient Multivariate Time Series Forecasting with 
 ## Metrics
 
 - **Definition of Success:**
-  - Clearly define what constitutes "success."
+  - Success will be defined by achieving comparable or better performance metrics than those reported in the original SOFTS paper.
+  - The implementation should demonstrate linear complexity with respect to the number of channels and time steps as claimed in the paper.
+  - The STAR module should effectively capture channel correlations while maintaining robustness against anomalies.
 
 - **Experiments Planned:**
-  - Specify experiments to be conducted.
-  - Justify the choice of metrics (accuracy or alternative metrics).
-  - For existing paper implementations, mention original metrics and expectations.
-  - If novel, explain how performance will be assessed.
+  - Implement the SOFTS model with the STAR module using TensorFlow.
+  - Reproduce the multivariate time series forecasting experiments on the datasets used in the original paper (ETT, Traffic, Electricity, Weather, Solar-Energy, and PEMS).
+  - Compare performance against baseline models mentioned in the paper (DLinear, TSMixer, TiDE, FEDformer, Stationary, PatchTST, Crossformer, iTransformer, SCINet, TimesNet).
+  - Perform ablation studies on different pooling methods in the STAR module (mean pooling, max pooling, weighted average, stochastic pooling).
+  - Test the universality of STAR by replacing attention mechanisms in other transformer-based models.
+  - Evaluate model performance with varying lookback window lengths.
+  - Analyze the impact of hyperparameters (hidden dimension, core dimension, number of encoder layers).
+  - Test model robustness against channel noise.
+
+- **Metrics:**
+  - Primary evaluation metrics: Mean Squared Error (MSE) and Mean Absolute Error (MAE).
+  - Model efficiency metrics: memory usage and inference time.
+  - The original paper reported significant improvements over state-of-the-art methods (e.g., 4.4% reduction in average MSE on Traffic dataset and 13.9% reduction on PEMS07 dataset).
 
 - **Goals:**
-  - Base, target, and stretch goals.
+  - Base goal: Successfully implement the SOFTS model in TensorFlow that can train and generate predictions on the benchmark datasets.
+  - Target goal: Achieve performance metrics within 5% of those reported in the original paper across all datasets.
+  - Stretch goal: Optimize the implementation to achieve better efficiency than reported in the paper while maintaining comparable accuracy, and potentially extend the model to additional datasets or applications.
 
 ## Ethics
 
-*(Select and discuss at least two of the following points relevant to your project.)*
+- **Broader societal issues related to your chosen problem space:**
+  - Time series forecasting has significant applications in critical domains like traffic management, energy consumption, healthcare, and financial markets. Improved forecasting models can lead to better resource allocation, reduced energy waste, and more efficient systems.
+  - However, over-reliance on automated forecasting systems without human oversight could lead to issues if predictions fail during critical situations or unusual circumstances.
+  - The deployment of such models in sensitive domains like healthcare or financial systems requires careful consideration of potential downstream impacts on human lives.
 
-- Broader societal issues related to your chosen problem space.
-- Suitability of deep learning approach for your problem.
-- Dataset collection and labeling concerns, representativeness, and possible biases.
-- Major stakeholders and implications of algorithmic errors.
-- Methods to quantify or measure error/success and related implications.
-- *(Optional)* Any additional ethical issue related to your algorithm.
+- **Dataset collection and labeling concerns, representativeness, and possible biases:**
+  - The datasets used in this study are collected from specific regions and time periods, which may limit their generalizability to other contexts. For example, traffic patterns in San Francisco may not represent traffic behaviors in other cities or countries.
+  - Temporal biases may exist in these datasets, such as seasonal patterns, economic cycles, or unique events during the collection period that might not be representative of future data.
+  - The model performance may vary across different channels within the datasets, potentially leading to uneven quality of predictions across different sensors or variables.
+  - Data from real-world sensors often contains noise, missing values, or anomalies that might not be uniformly distributed, affecting the model's performance on certain subgroups of data.
+
+- **Major stakeholders and implications of algorithmic errors:**
+  - Stakeholders include utility companies, traffic management authorities, healthcare systems, investors, and the general public affected by decisions made based on these forecasts.
+  - Errors in energy load forecasting could lead to grid instability, blackouts, or unnecessary energy production with environmental consequences.
+  - Inaccurate traffic predictions might result in congestion, longer commute times, and increased pollution.
+  - In healthcare applications, errors could potentially impact patient care decisions or resource allocation.
+  - The STAR module's ability to handle anomalous channels is particularly important, as the paper claims improved robustness against abnormal data points compared to other models. This feature should be carefully validated in the implementation.
 
 ## Division of Labor
 
