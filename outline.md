@@ -10,7 +10,7 @@ Reimplementation of *SOFTS: Efficient Multivariate Time Series Forecasting with 
 |:-------:|:--------:|
 | Letian Shen | syd-mbv |
 | Tianxi Lu   | degeneratorL |
-| Yinan Zhai   |  |
+| Yinan Zhai   | Kyle-zhai  |
 ## Introduction
 
 - **Problem Definition:**  
@@ -119,4 +119,20 @@ Reimplementation of *SOFTS: Efficient Multivariate Time Series Forecasting with 
 
 ## Division of Labor
 
-- Brief outline of each group member’s responsibilities.
+- **Letian Shen:**
+  - Lead the overall implementation of the SOFTS model in TensorFlow
+  - Implement the core STAR module functionality
+  - Coordinate integration of components
+  - Design and run experiments for model performance comparison
+
+- **Tianxi Lu:**
+  - Implement data preprocessing pipeline for all datasets
+  - Set up training and evaluation framework
+  - Conduct ablation studies on pooling methods
+  - Analyze and visualize results
+
+- **Yinan Zhai:**
+  - Implement the series embedding and linear predictor components
+  - Test model robustness against channel noise
+  - Design experiments for varying lookback window lengths
+  - Create documentation and prepare final presentation
