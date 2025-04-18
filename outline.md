@@ -6,11 +6,11 @@ Reimplementation of *SOFTS: Efficient Multivariate Time Series Forecasting with 
 
 ## Who
 <!-- - Letian Shen -->
-|   Name  |  Login   |
-|:-------:|:--------:|
-| Letian Shen | syd-mbv |
-| Tianxi Lu   | degeneratorL |
-| Yinan Zhai   | Kyle-zhai  |
+|   Name  |  GitHub  |  Login |
+|:-------:|:--------:|:-------:|
+| Letian Shen | syd-mbv | lshen33 |
+| Tianxi Lu   | degeneratorL | tlu44 |
+| Yinan Zhai   | Kyle-zhai  |  |
 ## Introduction
 
 - **Problem Definition:**  
