@@ -54,3 +54,19 @@ torch.set_num_threads(1)
 # parser.add_argument('--num_workers', type=int, default=4, help='data loader num workers')
 parser.add_argument('--num_workers', type=int, default=0, help='data loader num workers')
 ```
+
+
+## Re-implement *SOFTS* (Our: TensorFlow)
+```
+# Windows:
+conda create -n [env_name] python=3.10 -y
+conda activate [env_name]
+
+conda install -c conda-forge cudatoolkit=11.2 cudnn=8.1.0 -y
+python -m pip install "tensorflow<2.11"
+
+# numpy<2 is required
+pip install "numpy<2" --force-reinstall # 1.26.4
+
+pip install scikit-learn==1.2.2 pandas==2.2.3
+```
