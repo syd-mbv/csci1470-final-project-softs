@@ -183,13 +183,15 @@ def data_provider(args, flag):
     )
 
     # 如果内存允许，第一次迭代后缓存数据
-    tf_dataset = tf_dataset.cache()
+    # tf_dataset = tf_dataset.cache()
 
     tf_dataset = tf_dataset.batch(batch_size, drop_remainder=drop_last)
     tf_dataset = tf_dataset.prefetch(tf.data.AUTOTUNE)
 
     # 配置私有线程池（可选）
     options = tf.data.Options()
+    # 消除警告
+    options.experimental_distribute.auto_shard_policy = tf.data.experimental.AutoShardPolicy.DATA
     options.experimental_threading.private_threadpool_size = args.num_workers or tf.data.AUTOTUNE
     options.experimental_threading.max_intra_op_parallelism = 1
     tf_dataset = tf_dataset.with_options(options)

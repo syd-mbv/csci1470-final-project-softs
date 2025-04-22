@@ -84,6 +84,18 @@ class Dataset_ETT_hour(_BaseTS):
     def __read_data__(self):
         self.scaler = StandardScaler()
         df_raw = pd.read_csv(os.path.join(self.root_path, self.data_path))
+        # csv_path = os.path.join(self.root_path, self.data_path)
+        # try:
+        #     df_raw = pd.read_csv(
+        #         csv_path,
+        #         engine='python',
+        #         sep=',',   
+        #         low_memory=False,
+        #         on_bad_lines='skip'
+        #     )
+        # except Exception as e:
+        #     print(f"Warning: 常规解析失败，尝试简化参数读取 CSV：{e}")
+        #     df_raw = pd.read_csv(csv_path, engine='python')
 
         # 以 12 个月为一个训练周期
         border1s = [0, 12 * 30 * 24 - self.seq_len,

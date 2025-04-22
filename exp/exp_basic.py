@@ -6,14 +6,19 @@ from models import SOFTS
 
 
 class Exp_Basic(object):
-    def __init__(self, args):
+    # def __init__(self, args):
+    #     self.args = args
+    #     self.model_dict = {
+    #         'SOFTS': SOFTS,
+    #     }
+    #     self.device = self._acquire_device()
+    #     with tf.device(self.device):
+    #         self.model = self._build_model()
+    def __init__(self, args, strategy=None):
         self.args = args
-        self.model_dict = {
-            'SOFTS': SOFTS,
-        }
+        self.strategy = strategy  # 从 run.py 传入
+        self.model_dict = {'SOFTS': SOFTS}
         self.device = self._acquire_device()
-        with tf.device(self.device):
-            self.model = self._build_model()
 
     def _build_model(self):
         raise NotImplementedError

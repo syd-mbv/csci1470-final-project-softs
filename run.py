@@ -102,8 +102,10 @@ def main():
             f"fc{args.factor}_eb{args.embed}_dt{args.distil}_{args.des}"
         )
         # 把模型和优化器都创建在 strategy.scope() 里
+        # with strategy.scope():
+        #     exp = Exp(args)
         with strategy.scope():
-            exp = Exp(args)
+            exp = Exp(args, strategy=strategy)
         print(f">>>>>>> start training : {setting} >>>>>>>>>>")
         exp.train(setting)
         print(f">>>>>>> testing : {setting} <<<<<<<<")
@@ -116,8 +118,10 @@ def main():
             f"dm{args.d_model}_el{args.e_layers}_dl{args.d_layers}_df{args.d_ff}_"
             f"fc{args.factor}_eb{args.embed}_dt{args.distil}_{args.des}"
         )
+        # with strategy.scope():
+        #     exp = Exp(args)
         with strategy.scope():
-            exp = Exp(args)
+            exp = Exp(args, strategy=strategy)
         print(f">>>>>>> testing : {setting} <<<<<<<<")
         exp.test(setting, test=1)
 
