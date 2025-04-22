@@ -1,0 +1,14 @@
+dataset/*
+checkpoints/*
+.pytest_cache/
+.exe
+.dll
+.class
+.obj
+.idea/
+.vscode/
+.o
+.so
+*.log
+*.env
+*.pyc
