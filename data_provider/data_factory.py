@@ -158,14 +158,32 @@ def data_provider(args, flag):
 
     # 从索引 Dataset 开始
     ds = tf.data.Dataset.range(len(data_set))
-    # 并行映射到 __getitem__
-    tf_dataset = ds.map(
-        _tf_load,
-        num_parallel_calls=args.num_workers or tf.data.AUTOTUNE
-    )
+
+    # # 并行映射到 __getitem__
+    # tf_dataset = ds.map(
+    #     _tf_load,
+    #     num_parallel_calls=args.num_workers or tf.data.AUTOTUNE
+    # )
+
+    # if shuffle_flag:
+    #     tf_dataset = tf_dataset.shuffle(buffer_size=len(data_set))
 
     if shuffle_flag:
-        tf_dataset = tf_dataset.shuffle(buffer_size=len(data_set))
+        ds = ds.shuffle(buffer_size=len(data_set))
+
+    # 用 interleave 并行调度多路 _tf_load 调用
+    tf_dataset = ds.interleave(
+        lambda idx: tf.data.Dataset.from_tensors(idx).map(
+            _tf_load,
+            num_parallel_calls=args.num_workers or tf.data.AUTOTUNE
+        ),
+        cycle_length=args.num_workers or tf.data.AUTOTUNE,
+        num_parallel_calls=args.num_workers or tf.data.AUTOTUNE,
+        deterministic=False
+    )
+
+    # 如果内存允许，第一次迭代后缓存数据
+    tf_dataset = tf_dataset.cache()
 
     tf_dataset = tf_dataset.batch(batch_size, drop_remainder=drop_last)
     tf_dataset = tf_dataset.prefetch(tf.data.AUTOTUNE)

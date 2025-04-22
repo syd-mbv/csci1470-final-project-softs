@@ -8,6 +8,9 @@ import os
 from exp.exp_long_term_forecasting import Exp_Long_Term_Forecast  
 
 
+os.environ["OMP_NUM_THREADS"] = "6"
+os.environ["MKL_NUM_THREADS"] = "6"
+
 def main():
     # 1) 固定随机种子
     fix_seed = 2021

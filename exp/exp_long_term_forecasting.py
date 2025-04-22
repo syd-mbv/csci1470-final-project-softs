@@ -80,7 +80,8 @@ class Exp_Long_Term_Forecast(Exp_Basic):
 
     def train(self, setting):
         # 获取数据
-        _, train_loader = self._get_data('train')
+        # _, train_loader = self._get_data('train')
+        train_set, train_loader = self._get_data('train')
         _, vali_loader  = self._get_data('val')
         _, test_loader  = self._get_data('test')
 
@@ -89,7 +90,11 @@ class Exp_Long_Term_Forecast(Exp_Basic):
         os.makedirs(path, exist_ok=True)
 
         # 训练准备
-        train_steps = tf.data.experimental.cardinality(train_loader).numpy()
+        # train_steps = tf.data.experimental.cardinality(train_loader).numpy()
+        total_samples = len(train_set)
+        batch_size    = self.args.batch_size
+        train_steps = int(np.ceil(total_samples / batch_size))
+
         early_stopping = EarlyStopping(patience=self.args.patience, verbose=True)
         optimizer = self._select_optimizer()
         criterion = self._select_criterion()
