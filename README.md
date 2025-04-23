@@ -70,3 +70,12 @@ pip install "numpy<2" --force-reinstall # 1.26.4
 
 pip install scikit-learn==1.2.2 pandas==2.2.3
 ```
+
+### Our Results (TensorFlow)
+| Dataset | Models Metric | MSE | MAE |
+|:------:|:--------:|:-----:|:------:|
+| ECL | 96 | 0.152 | 0.239 |
+|  | 192 | 0.165 | 0.252 |
+|  | 336  | 0.183 | 0.270 |
+|  | 720  | 0.218 | 0.300 |
+| ECL | Avg  | 0.179 | 0.265 |
