@@ -322,7 +322,7 @@ class Exp_Long_Term_Forecast(Exp_Basic):
             tr_loss = train_metric.result().numpy()
             val_loss = self.vali(None, val_loader, None)
             test_loss = self.vali(None, test_loader, None)
-            print(f"Epoch {epoch+1} ▶ Train: {tr_loss:.7f}, Val: {val_loss:.7f}, Test: {test_loss:.7f}")
+            print(f"Epoch {epoch+1} | Train: {tr_loss:.7f}, Val: {val_loss:.7f}, Test: {test_loss:.7f}")
 
             early_stopping(val_loss, self.model, ckpt_dir)
             if early_stopping.early_stop:
