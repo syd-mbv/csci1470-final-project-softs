@@ -95,9 +95,6 @@
 #         deterministic=False
 #     )
 
-#     # 如果内存允许，第一次迭代后缓存数据
-#     # tf_dataset = tf_dataset.cache()
-
 #     tf_dataset = tf_dataset.batch(batch_size, drop_remainder=drop_last)
 #     tf_dataset = tf_dataset.prefetch(tf.data.AUTOTUNE)
 
@@ -110,6 +107,8 @@
 #     tf_dataset = tf_dataset.with_options(options)
 
 #     return data_set, tf_dataset
+
+
 
 import tensorflow as tf
 import numpy as np
@@ -129,72 +128,124 @@ data_dict = {
     'PEMS':   Dataset_PEMS,
 }
 
+# def data_provider(args, flag):
+#     # 1) 构造原始 python data_set
+#     Data = data_dict[args.data]
+#     if flag=='pred': Data = Dataset_Pred
+#     timeenc = 0 if args.embed!='timeF' else 1
+#     data_set = Data(
+#         root_path=args.root_path, data_path=args.data_path,
+#         flag=flag, size=[args.seq_len,args.label_len,args.pred_len,args.enc_in],
+#         features=args.features, target=args.target,
+#         timeenc=timeenc, freq=args.freq,
+#         seasonal_patterns=getattr(args,'seasonal_patterns',None)
+#     )
+#     N = len(data_set)
+#     print(f"{flag} | # samples = {N}")
+
+#     # 2) 决定批次与 shuffle 策略
+#     if flag=='test':
+#         batch_size, shuffle_flag, drop_last = args.batch_size, False, True
+#     elif flag=='pred':
+#         batch_size, shuffle_flag, drop_last = 1, False, False
+#     else:
+#         batch_size, shuffle_flag, drop_last = args.batch_size, True, True
+
+#     # 3) 从索引生成 Dataset
+#     ds = tf.data.Dataset.range(N)
+#     if shuffle_flag:
+#         ds = ds.shuffle(buffer_size=N)
+
+#     # 4) 先把索引按 batch 收集
+#     ds = ds.batch(batch_size, drop_remainder=drop_last)
+
+#     # 5) 用一个 batch-level 的 py_function 一次性加载整个 batch
+#     def _load_batch(idx_batch):
+#         # 这段在 Python 里执行一次，idx_batch 是一个 numpy array
+#         idxs = idx_batch.numpy()
+#         xs, ys, xms, yms = [], [], [], []
+#         for i in idxs:
+#             sx, sy, sxm, sym = data_set[i]
+#             xs.append(np.array(sx, dtype=np.float32))
+#             ys.append(np.array(sy, dtype=np.float32))
+#             xms.append(np.array(sxm, dtype=np.float32))
+#             yms.append(np.array(sym, dtype=np.float32))
+#         return (
+#             np.stack(xs, axis=0),
+#             np.stack(ys, axis=0),
+#             np.stack(xms, axis=0),
+#             np.stack(yms, axis=0),
+#         )
+
+#     def _tf_load_batch(idx_batch):
+#         outs = tf.py_function(
+#             func=_load_batch,
+#             inp=[idx_batch],
+#             Tout=[tf.float32, tf.float32, tf.float32, tf.float32]
+#         )
+#         # 设置每个张量的形状：[batch_size, seq_len, ...]
+#         # 用 data_set[0] 的单样本形状铺第一维
+#         sample_shapes = [arr.shape for arr in data_set[0]]
+#         for t, shape in zip(outs, sample_shapes):
+#             t.set_shape([batch_size] + list(shape))
+#         return tuple(outs)
+
+#     ds = ds.map(
+#         _tf_load_batch,
+#         num_parallel_calls=args.num_workers or tf.data.AUTOTUNE
+#     )
+
+#     # 6) 预取可选（只 prefetch）
+#     ds = ds.prefetch(tf.data.AUTOTUNE)
+
+#     # 7) 分布式分片策略 & 线程池优化
+#     options = tf.data.Options()
+#     options.experimental_distribute.auto_shard_policy = tf.data.experimental.AutoShardPolicy.DATA
+#     options.experimental_threading.private_threadpool_size = args.num_workers or tf.data.AUTOTUNE
+#     # options.experimental_threading.max_intra_op_parallelism = 1
+#     ds = ds.with_options(options)
+
+#     return data_set, ds
 def data_provider(args, flag):
-    # 1) 选 Dataset 类，构造 data_set
-    Data = data_dict[args.data]
+    # ---------- 1. 构造 python dataset ----------
+    DataCls = Dataset_Pred if flag == 'pred' else data_dict[args.data]
     timeenc = 0 if args.embed != 'timeF' else 1
-    if flag == 'pred':
-        Data = Dataset_Pred
-
-    data_set = Data(
-        root_path=args.root_path,
-        data_path=args.data_path,
-        flag=flag,
+    ds_obj  = DataCls(
+        root_path=args.root_path, data_path=args.data_path, flag=flag,
         size=[args.seq_len, args.label_len, args.pred_len, args.enc_in],
-        features=args.features,
-        target=args.target,
-        timeenc=timeenc,
-        freq=args.freq,
-        seasonal_patterns=getattr(args, 'seasonal_patterns', None)
+        features=args.features, target=args.target, timeenc=timeenc,
+        freq=args.freq, seasonal_patterns=getattr(args, 'seasonal_patterns', None)
     )
-    print(f"{flag} | # samples = {len(data_set)}")
+    N = len(ds_obj); print(f"{flag} | #samples={N}")
 
-    # 2) 取出所有样本到 numpy array（一次性）
-    #    dtype=np.float32 保证 from_tensor_slices 后就是 tf.float32
-    xs, ys, xms, yms = [], [], [], []
-    for seq_x, seq_y, seq_x_mark, seq_y_mark in data_set:
-        # 如果这是 EagerTensor，就先转到 numpy
-        if isinstance(seq_x, tf.Tensor):
-            seq_x = seq_x.numpy()
-            seq_y = seq_y.numpy()
-            seq_x_mark = seq_x_mark.numpy()
-            seq_y_mark = seq_y_mark.numpy()
+    # # ---------- 2. 直接用 tf.data.Dataset.from_tensor_slices ----------
+    # full = tf.data.Dataset.from_tensor_slices(ds_obj)   # 每条元素就是 4 个 float32 Tensor
 
-        # 用 np.array 保证 dtype=np.float32
-        xs.append(np.array(seq_x,      dtype=np.float32))
-        ys.append(np.array(seq_y,      dtype=np.float32))
-        xms.append(np.array(seq_x_mark, dtype=np.float32))
-        yms.append(np.array(seq_y_mark, dtype=np.float32))
+    # ---------- 3. shuffle / batch ----------
+    def gen():
+        for i in range(N):
+            yield ds_obj[i]          # __getitem__ 已返回 tf.float32 Tensor
 
-    xs   = np.stack(xs, axis=0)   # shape [N, seq_len, ...]
-    ys   = np.stack(ys, axis=0)
-    xms  = np.stack(xms, axis=0)
-    yms  = np.stack(yms, axis=0)
+    sample = ds_obj[0]
+    output_signature = tuple(
+        tf.TensorSpec(shape=t.shape, dtype=tf.float32) for t in sample
+    )
 
-    # 3) 从这些 numpy 数组直接构造 Dataset
-    ds = tf.data.Dataset.from_tensor_slices((xs, ys, xms, yms))
+    full = tf.data.Dataset.from_generator(gen, output_signature=output_signature)
 
-    # 4) 训练 / 验证 / 测试 的不同设置
-    if flag in ['train', 'val']:
-        ds = ds.shuffle(buffer_size=len(xs))
-        batch_size = args.batch_size
-        drop_last  = False
-    elif flag == 'pred':
-        batch_size = 1
-        drop_last  = False
-    else:  # flag == 'test'
-        batch_size = args.batch_size
-        drop_last  = False
+    # ---------- 4) shuffle / batch ----------
+    if flag == 'train':
+        full = full.shuffle(buffer_size=N, reshuffle_each_iteration=True)
 
-    # 5) 分布式自动分片
+    drop_last = flag in ('train', 'test')
+    bs        = 1 if flag == 'pred' else args.batch_size
+    full      = full.batch(bs, drop_remainder=drop_last)
+
+    # ---------- 5) cache + prefetch ----------
+    tf_dataset = full.cache().prefetch(tf.data.AUTOTUNE)
     options = tf.data.Options()
-    options.experimental_distribute.auto_shard_policy = (
-        tf.data.experimental.AutoShardPolicy.DATA
-    )
-    ds = ds.with_options(options)
-
-    # 6) Batch + Prefetch
-    ds = ds.batch(batch_size, drop_remainder=drop_last)
-    ds = ds.prefetch(tf.data.AUTOTUNE)
-
-    return data_set, ds
+    options.experimental_distribute.auto_shard_policy = tf.data.experimental.AutoShardPolicy.DATA
+    options.experimental_threading.private_threadpool_size = args.num_workers or tf.data.AUTOTUNE
+    tf_dataset = tf_dataset.with_options(options)
+    # --------- 5. dataset 对象仅用于 len() 与 inverse_transform ----------
+    return ds_obj, tf_dataset

@@ -24,18 +24,32 @@ class _BaseTS(Dataset):
     label_len: int
     pred_len: int
 
+    # def __getitem__(self, idx: int):
+    #     s_begin = idx
+    #     s_end = s_begin + self.seq_len
+    #     r_begin = s_end - self.label_len
+    #     r_end = r_begin + self.label_len + self.pred_len
+
+    #     seq_x = self.data_x[s_begin:s_end]
+    #     seq_y = self.data_y[r_begin:r_end]
+    #     seq_x_mark = self.data_stamp[s_begin:s_end]
+    #     seq_y_mark = self.data_stamp[r_begin:r_end]
+
+    #     return tuple(_to_tf(seq_x, seq_y, seq_x_mark, seq_y_mark))
+    
     def __getitem__(self, idx: int):
+        # window index → encoder / decoder range
         s_begin = idx
         s_end = s_begin + self.seq_len
         r_begin = s_end - self.label_len
         r_end = r_begin + self.label_len + self.pred_len
 
-        seq_x = self.data_x[s_begin:s_end]
-        seq_y = self.data_y[r_begin:r_end]
-        seq_x_mark = self.data_stamp[s_begin:s_end]
-        seq_y_mark = self.data_stamp[r_begin:r_end]
+        seq_x      = tf.constant(self.data_x[s_begin:s_end],      dtype=tf.float32)
+        seq_y      = tf.constant(self.data_y[r_begin:r_end],      dtype=tf.float32)
+        seq_x_mark = tf.constant(self.data_stamp[s_begin:s_end],  dtype=tf.float32)
+        seq_y_mark = tf.constant(self.data_stamp[r_begin:r_end],  dtype=tf.float32)
 
-        return tuple(_to_tf(seq_x, seq_y, seq_x_mark, seq_y_mark))
+        return seq_x, seq_y, seq_x_mark, seq_y_mark
 
     def __len__(self):
         return len(self.data_x) - self.seq_len - self.pred_len + 1
@@ -327,18 +341,29 @@ class Dataset_Random(_BaseTS):
         # 没有时间戳，用全 0 placeholder
         # self.data_stamp = np.zeros((b2 - b1, 4))
 
-    def __getitem__(self, idx):
-        s_begin = idx
-        s_end = s_begin + self.seq_len
-        r_begin = s_end - self.label_len
-        r_end = r_begin + self.label_len + self.pred_len
+    # def __getitem__(self, idx):
+    #     s_begin = idx
+    #     s_end = s_begin + self.seq_len
+    #     r_begin = s_end - self.label_len
+    #     r_end = r_begin + self.label_len + self.pred_len
 
-        seq_x = self.data_x[s_begin:s_end]
-        seq_y = self.data_y[r_begin:r_end]
-        seq_x_mark = np.zeros((seq_x.shape[0], 4))
-        seq_y_mark = np.zeros((seq_y.shape[0], 4))
+    #     seq_x = self.data_x[s_begin:s_end]
+    #     seq_y = self.data_y[r_begin:r_end]
+    #     seq_x_mark = np.zeros((seq_x.shape[0], 4))
+    #     seq_y_mark = np.zeros((seq_y.shape[0], 4))
 
-        return tuple(_to_tf(seq_x, seq_y, seq_x_mark, seq_y_mark))
+    #     return tuple(_to_tf(seq_x, seq_y, seq_x_mark, seq_y_mark))
+    def __getitem__(self, idx: int):
+        s_b = idx; s_e = s_b + self.seq_len
+        r_b = s_e - self.label_len
+        r_e = r_b + self.label_len + self.pred_len
+
+        seq_x = tf.constant(self.data_x[s_b:s_e], dtype=tf.float32)
+        seq_y = tf.constant(self.data_y[r_b:r_e], dtype=tf.float32)
+        # placeholder stamps
+        seq_x_mark = tf.zeros((self.seq_len, 4), dtype=tf.float32)
+        seq_y_mark = tf.zeros((self.label_len + self.pred_len, 4), dtype=tf.float32)
+        return seq_x, seq_y, seq_x_mark, seq_y_mark
 
 
 class Dataset_PEMS(_BaseTS):
@@ -386,17 +411,28 @@ class Dataset_PEMS(_BaseTS):
         self.data_x = df
         self.data_y = df
 
-    def __getitem__(self, idx):
-        s_begin = idx
-        s_end = s_begin + self.seq_len
-        r_begin = s_end - self.label_len
-        r_end = r_begin + self.label_len + self.pred_len
+    # def __getitem__(self, idx):
+    #     s_begin = idx
+    #     s_end = s_begin + self.seq_len
+    #     r_begin = s_end - self.label_len
+    #     r_end = r_begin + self.label_len + self.pred_len
 
-        seq_x = self.data_x[s_begin:s_end]
-        seq_y = self.data_y[r_begin:r_end]
-        seq_x_mark = np.zeros((seq_x.shape[0], 1))
-        seq_y_mark = np.zeros((seq_y.shape[0], 1))
-        return tuple(_to_tf(seq_x, seq_y, seq_x_mark, seq_y_mark))
+    #     seq_x = self.data_x[s_begin:s_end]
+    #     seq_y = self.data_y[r_begin:r_end]
+    #     seq_x_mark = np.zeros((seq_x.shape[0], 1))
+    #     seq_y_mark = np.zeros((seq_y.shape[0], 1))
+    #     return tuple(_to_tf(seq_x, seq_y, seq_x_mark, seq_y_mark))
+    def __getitem__(self, idx: int):
+        s_b, s_e = idx, idx + self.seq_len
+        r_b = s_e - self.label_len
+        r_e = r_b + self.label_len + self.pred_len
+
+        seq_x = tf.constant(self.data_x[s_b:s_e], dtype=tf.float32)
+        seq_y = tf.constant(self.data_y[r_b:r_e], dtype=tf.float32)
+        seq_x_mark = tf.zeros((self.seq_len, 1), dtype=tf.float32)
+        seq_y_mark = tf.zeros((self.label_len + self.pred_len, 1), dtype=tf.float32)
+        return seq_x, seq_y, seq_x_mark, seq_y_mark
+
 
 
 class Dataset_Solar(_BaseTS):
@@ -450,17 +486,27 @@ class Dataset_Solar(_BaseTS):
         self.data_x = data[border1:border2]
         self.data_y = data[border1:border2]
 
-    def __getitem__(self, idx):
-        s_begin = idx
-        s_end = s_begin + self.seq_len
-        r_begin = s_end - self.label_len
-        r_end = r_begin + self.label_len + self.pred_len
+    # def __getitem__(self, idx):
+    #     s_begin = idx
+    #     s_end = s_begin + self.seq_len
+    #     r_begin = s_end - self.label_len
+    #     r_end = r_begin + self.label_len + self.pred_len
 
-        seq_x = self.data_x[s_begin:s_end]
-        seq_y = self.data_y[r_begin:r_end]
-        seq_x_mark = np.zeros((seq_x.shape[0], 1))
-        seq_y_mark = np.zeros((seq_y.shape[0], 1))
-        return tuple(_to_tf(seq_x, seq_y, seq_x_mark, seq_y_mark))
+    #     seq_x = self.data_x[s_begin:s_end]
+    #     seq_y = self.data_y[r_begin:r_end]
+    #     seq_x_mark = np.zeros((seq_x.shape[0], 1))
+    #     seq_y_mark = np.zeros((seq_y.shape[0], 1))
+    #     return tuple(_to_tf(seq_x, seq_y, seq_x_mark, seq_y_mark))
+    def __getitem__(self, idx: int):
+        s_b, s_e = idx, idx + self.seq_len
+        r_b, r_e = s_e - self.label_len, s_e - self.label_len + self.label_len + self.pred_len
+
+        seq_x = tf.constant(self.data_x[s_b:s_e], dtype=tf.float32)
+        seq_y = tf.constant(self.data_y[r_b:r_e], dtype=tf.float32)
+        seq_x_mark = tf.zeros((self.seq_len, 1), dtype=tf.float32)
+        seq_y_mark = tf.zeros((self.label_len + self.pred_len, 1), dtype=tf.float32)
+        return seq_x, seq_y, seq_x_mark, seq_y_mark
+
 
 
 class Dataset_Pred(_BaseTS):
@@ -545,15 +591,26 @@ class Dataset_Pred(_BaseTS):
     def __len__(self):
         return len(self.data_x) - self.seq_len + 1
 
-    def __getitem__(self, idx):
-        s_begin = idx
-        s_end = s_begin + self.seq_len
-        r_begin = s_end - self.label_len       # 仅 label_len 作为 decoder 输入
-        r_end = r_begin + self.label_len + self.pred_len
+    # def __getitem__(self, idx):
+    #     s_begin = idx
+    #     s_end = s_begin + self.seq_len
+    #     r_begin = s_end - self.label_len       # 仅 label_len 作为 decoder 输入
+    #     r_end = r_begin + self.label_len + self.pred_len
 
-        seq_x = self.data_x[s_begin:s_end]
-        seq_y = self.data_y[r_begin:r_begin + self.label_len]
-        seq_x_mark = self.data_stamp[s_begin:s_end]
-        seq_y_mark = self.data_stamp[r_begin:r_end]
+    #     seq_x = self.data_x[s_begin:s_end]
+    #     seq_y = self.data_y[r_begin:r_begin + self.label_len]
+    #     seq_x_mark = self.data_stamp[s_begin:s_end]
+    #     seq_y_mark = self.data_stamp[r_begin:r_end]
 
-        return tuple(_to_tf(seq_x, seq_y, seq_x_mark, seq_y_mark))
+    #     return tuple(_to_tf(seq_x, seq_y, seq_x_mark, seq_y_mark))
+    def __getitem__(self, idx: int):
+        s_b = idx
+        s_e = s_b + self.seq_len
+        r_b = s_e - self.label_len  # decoder input starts label_len before end
+        r_e = r_b + self.label_len + self.pred_len
+
+        seq_x      = tf.constant(self.data_x[s_b:s_e], dtype=tf.float32)
+        seq_y      = tf.constant(self.data_y[r_b:r_b + self.label_len], dtype=tf.float32)
+        seq_x_mark = tf.constant(self.data_stamp[s_b:s_e], dtype=tf.float32)
+        seq_y_mark = tf.constant(self.data_stamp[r_b:r_e], dtype=tf.float32)
+        return seq_x, seq_y, seq_x_mark, seq_y_mark

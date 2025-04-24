@@ -41,6 +41,7 @@ class Exp_Long_Term_Forecast(Exp_Basic):
         # MSELoss
         # return tf.keras.losses.MeanSquaredError()
         return tf.keras.losses.MeanSquaredError(reduction=tf.keras.losses.Reduction.NONE)
+
     
     # use tf.function
     @tf.function
@@ -63,8 +64,14 @@ class Exp_Long_Term_Forecast(Exp_Basic):
             f_dim = -1 if self.args.features == 'MS' else 0
             preds = outputs[:, -self.args.pred_len:, f_dim:]
             targets = by[:, -self.args.pred_len:, f_dim:]
-            loss = self.criterion(targets, preds)
+            # loss = self.criterion(targets, preds)
             # loss = tf.reduce_mean(loss)
+            per_example_loss = self.criterion(targets, preds)
+            replicas = (self.strategy.num_replicas_in_sync
+                        if self.strategy is not None else 1)
+            global_bs = self.args.batch_size * replicas
+            loss = tf.nn.compute_average_loss(per_example_loss,
+                                            global_batch_size=global_bs)
 
         grads = tape.gradient(loss, self.model.trainable_variables)
         self.optimizer.apply_gradients(zip(grads, self.model.trainable_variables))
@@ -130,7 +137,7 @@ class Exp_Long_Term_Forecast(Exp_Basic):
         ckpt_dir = os.path.join(self.args.checkpoints, setting)
         os.makedirs(ckpt_dir, exist_ok=True)
 
-        time_now   = time.time()
+        time_now  = time.time()
 
         # num_replicas = self.strategy.num_replicas_in_sync
         # train_steps = len(train_set) // num_replicas
@@ -165,7 +172,7 @@ class Exp_Long_Term_Forecast(Exp_Basic):
                     loss = self._train_step(bx, by, bxm, bym)
 
                 # train_metric.update_state(loss)
-                loss_value = float(tf.reduce_mean(loss))
+                loss_value = float(loss)
 
                 if (step + 1) % 100 == 0:
                     # avg_loss = train_metric.result().numpy()
