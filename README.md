@@ -1,5 +1,5 @@
-# csci1470-final-project-softs
-Final project of Brown CSCI1470 Deep Learning
+# CSCI1470-Final-Project-SOFTS
+Final project for Brown CSCI1470 Deep Learning
 
 ## Dataset
 
