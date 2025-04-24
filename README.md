@@ -1,6 +1,8 @@
 # CSCI1470-Final-Project-SOFTS
 Final project for Brown CSCI1470 Deep Learning
 
+## Introduction
+
 ## Dataset
 
 
