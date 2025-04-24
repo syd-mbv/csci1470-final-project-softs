@@ -1,5 +1,6 @@
 dataset/*
 checkpoints/*
+logs/
 .pytest_cache/
 .exe
 .dll

@@ -1,5 +1,3 @@
-# layers/Transformer_EncDec.py
-
 from typing import List, Optional
 import tensorflow as tf
 

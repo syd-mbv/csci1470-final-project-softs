@@ -4,7 +4,9 @@ import numpy as np
 import tensorflow as tf
 import os
 
-# 这里假设你已经有一个基于 TensorFlow 的同名实验类
+# # for test
+# import cProfile, pstats
+
 from exp.exp_long_term_forecasting import Exp_Long_Term_Forecast  
 
 
@@ -133,4 +135,11 @@ def main():
 
 
 if __name__ == "__main__":
+    # pr = cProfile.Profile()
+    # pr.enable()
+
     main()
+
+    # pr.disable()
+    # ps = pstats.Stats(pr).sort_stats("cumtime")
+    # ps.print_stats(20)  # 打印耗时排名前 20 的函数
