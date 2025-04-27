@@ -229,10 +229,7 @@ def data_provider(args, flag):
     sample = ds_obj[0]
 
     def _flexible_shape(t):
-        # 只把 batch 前面的 “time” 维设成 None，其他维固定
-        shape = list(t.shape)
-        shape[0] = None          # or shape[:] = [None]*len(shape)  → 全可变
-        return tf.TensorSpec(shape=shape, dtype=tf.float32)
+        return tf.TensorSpec(shape=[None] * len(t.shape), dtype=tf.float32)
 
     # output_signature = tuple(
     #     tf.TensorSpec(shape=t.shape, dtype=tf.float32) for t in sample
