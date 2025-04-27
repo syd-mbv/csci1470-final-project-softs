@@ -254,6 +254,86 @@ class Dataset_Custom(_BaseTS):
     def inverse_transform(self, data):
         return self.scaler.inverse_transform(data)
 
+class Dataset_M4(_BaseTS):
+    def __init__(
+        self, root_path, flag="train", size=None,
+        features="S", data_path="ETTh1.csv",
+        target="OT", scale=True, timeenc=0, freq="h", seasonal_patterns=None
+    ):
+        if size == None:
+            self.seq_len = 24 * 4 * 4
+            self.label_len = 24 * 4
+            self.pred_len = 24 * 4
+        else:
+            self.seq_len = size[0]
+            self.label_len = size[1]
+            self.pred_len = size[2]
+
+        self.features, self.target = features, target
+        self.scale, self.timeenc, self.freq = scale, timeenc, freq
+
+        self.root_path, self.data_path = root_path, data_path
+        self.set_type = {"train": 0, "val": 1, "test": 2}[flag]
+        self.__read_data__()
+
+    def __read_data__(self):
+        self.scaler = StandardScaler()
+        df_raw = pd.read_csv(os.path.join(self.root_path, self.data_path))
+
+        # cols = list(df_raw.columns)
+        # cols.remove(self.target)
+        # cols.remove("date")
+        if self.cols:
+            cols = self.cols.copy()
+            # 如果用户手动给了 cols，却忘了包含 target，就补上
+            if self.target not in cols and self.target in df_raw.columns:
+                cols.append(self.target)
+        else:
+            cols = list(df_raw.columns)
+            if "date" in cols:  # 防止没有 date 列时报 KeyError
+                cols.remove("date")
+        
+
+        df_raw = df_raw[["date"] + cols + [self.target]]
+
+        num_train = int(len(df_raw) * 0.7)
+        num_test = int(len(df_raw) * 0.2)
+        num_vali = len(df_raw) - num_train - num_test
+        border1s = [0, num_train - self.seq_len, len(df_raw) - num_test - self.seq_len]
+        border2s = [num_train, num_train + num_vali, len(df_raw)]
+        b1, b2 = border1s[self.set_type], border2s[self.set_type]
+
+        if self.features in ("M", "MS"):
+            # df_data = df_raw[df_raw.columns[1:]]
+            df_data = [c for c in cols if c != self.target]
+        else:
+            df_data = df_raw[[self.target]]
+
+        if self.scale:
+            self.scaler.fit(df_data.values[border1s[0]:border2s[0]])
+            data = self.scaler.transform(df_data.values)
+        else:
+            data = df_data.values
+
+        df_stamp = df_raw[["date"]][b1:b2]
+        df_stamp["date"] = pd.to_datetime(df_stamp.date)
+        if self.timeenc == 0:
+            df_stamp["month"] = df_stamp.date.dt.month
+            df_stamp["day"] = df_stamp.date.dt.day
+            df_stamp["weekday"] = df_stamp.date.dt.weekday
+            df_stamp["hour"] = df_stamp.date.dt.hour
+            data_stamp = df_stamp.drop(["date"], axis=1).values
+        else:
+            data_stamp = time_features(pd.to_datetime(df_stamp["date"].values),
+                                       freq=self.freq).T
+
+        self.data_x = data[b1:b2]
+        self.data_y = data[b1:b2]
+        self.data_stamp = data_stamp
+
+    def inverse_transform(self, data):
+        return self.scaler.inverse_transform(data)
+
 
 class Dataset_Random(_BaseTS):
     def __init__(self, root_path, flag='train', size=None,

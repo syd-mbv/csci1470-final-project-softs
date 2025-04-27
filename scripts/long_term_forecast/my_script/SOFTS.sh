@@ -4,7 +4,7 @@ python -u run.py \
   --data_path daily_softs_ready.csv \
   --model_id M4_96_48 \
   --model SOFTS \
-  --data custom \
+  --data M4 \
   --features M \
   --seq_len 96 \
   --label_len 48 \
