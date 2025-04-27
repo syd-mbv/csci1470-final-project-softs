@@ -10,15 +10,21 @@
 
 
 ## Challenges
-  - Re-implement the system in TensorFlow framework instead of PyTorch.   
+  - Re-implement the system in TensorFlow framework instead of PyTorch. 
+  - Simple ```Dataloader``` in PyTorch must be implemented manually using TensorFlow.
+  - 
 ## Insights
 Are there any concrete results you can show at this point?
 How is your model performing compared with expectations?
  - We have built the entire system in the tensorflow framework.
  - Successfully completed most of the experiments in the paper, completed training and testing on the datasets mentioned in the paper and collected results.
  - 
+ - The Data pipeline is tricky to build.
+ - Some OS operations need to consider different scenarios for Linux and Windows.
 ## Plan
 Are you on track with your project?
 What do you need to dedicate more time to?
 What are you thinking of changing, if anything?
-
+ - Basically, we are on track with out project.
+ - We need to invest more time in experimenting on new datasets and processing the results.
+ - Maybe it could, hopefully, reduce the model prediction error a little bit.
