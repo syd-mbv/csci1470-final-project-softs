@@ -13,30 +13,17 @@ from utils.timefeatures import time_features
 warnings.filterwarnings('ignore')
 
 def _to_tf(*arrays, dtype=tf.float32):
-    """将 numpy → tf tensor，便于后续计算。"""
     return [tf.convert_to_tensor(a, dtype=dtype) for a in arrays]
 
 
 class _BaseTS(Dataset):
-    """所有数据集共有的 helper：把数据分段并实现通用的 __getitem__/__len__。"""
+    """final label_len as decoder input, pred_len as output step 
+    common to all datasets helper: segment data and implement generic __getitem__/__len__."""
 
     seq_len: int
     label_len: int
     pred_len: int
 
-    # def __getitem__(self, idx: int):
-    #     s_begin = idx
-    #     s_end = s_begin + self.seq_len
-    #     r_begin = s_end - self.label_len
-    #     r_end = r_begin + self.label_len + self.pred_len
-
-    #     seq_x = self.data_x[s_begin:s_end]
-    #     seq_y = self.data_y[r_begin:r_end]
-    #     seq_x_mark = self.data_stamp[s_begin:s_end]
-    #     seq_y_mark = self.data_stamp[r_begin:r_end]
-
-    #     return tuple(_to_tf(seq_x, seq_y, seq_x_mark, seq_y_mark))
-    
     def __getitem__(self, idx: int):
         # window index → encoder / decoder range
         s_begin = idx
@@ -54,7 +41,6 @@ class _BaseTS(Dataset):
     def __len__(self):
         return len(self.data_x) - self.seq_len - self.pred_len + 1
 
-    # 给训练后反归一化用
     def inverse_transform(self, data: np.ndarray):
         return self.scaler.inverse_transform(data)
 
@@ -77,7 +63,6 @@ class Dataset_ETT_hour(_BaseTS):
         freq: str = "h",
         seasonal_patterns=None
     ):
-        # ---------- 长度配置 ----------
         if size == None:
             self.seq_len = 24 * 4 * 4
             self.label_len = 24 * 4
@@ -87,7 +72,6 @@ class Dataset_ETT_hour(_BaseTS):
             self.label_len = size[1]
             self.pred_len = size[2]
 
-        # ---------- 读数据 ----------
         self.features, self.target = features, target
         self.scale, self.timeenc, self.freq = scale, timeenc, freq
 
@@ -98,18 +82,6 @@ class Dataset_ETT_hour(_BaseTS):
     def __read_data__(self):
         self.scaler = StandardScaler()
         df_raw = pd.read_csv(os.path.join(self.root_path, self.data_path))
-        # csv_path = os.path.join(self.root_path, self.data_path)
-        # try:
-        #     df_raw = pd.read_csv(
-        #         csv_path,
-        #         engine='python',
-        #         sep=',',   
-        #         low_memory=False,
-        #         on_bad_lines='skip'
-        #     )
-        # except Exception as e:
-        #     print(f"Warning: 常规解析失败，尝试简化参数读取 CSV：{e}")
-        #     df_raw = pd.read_csv(csv_path, engine='python')
 
         # 以 12 个月为一个训练周期
         border1s = [0, 12 * 30 * 24 - self.seq_len,
@@ -213,11 +185,6 @@ class Dataset_ETT_minute(Dataset_ETT_hour):
         self.data_y = data[b1:b2]
         self.data_stamp = data_stamp
 
-
-# ===================================================
-# 下面几个数据集（Custom / Random / PEMS / Solar / Pred）
-# 逻辑与原版一致，仅把 torch.* → tf.*
-# ===================================================
 
 class Dataset_Custom(_BaseTS):
     def __init__(
@@ -344,21 +311,7 @@ class Dataset_Random(_BaseTS):
 
         self.data_x = data[b1:b2]
         self.data_y = data[b1:b2]
-        # 没有时间戳，用全 0 placeholder
-        # self.data_stamp = np.zeros((b2 - b1, 4))
 
-    # def __getitem__(self, idx):
-    #     s_begin = idx
-    #     s_end = s_begin + self.seq_len
-    #     r_begin = s_end - self.label_len
-    #     r_end = r_begin + self.label_len + self.pred_len
-
-    #     seq_x = self.data_x[s_begin:s_end]
-    #     seq_y = self.data_y[r_begin:r_end]
-    #     seq_x_mark = np.zeros((seq_x.shape[0], 4))
-    #     seq_y_mark = np.zeros((seq_y.shape[0], 4))
-
-    #     return tuple(_to_tf(seq_x, seq_y, seq_x_mark, seq_y_mark))
     def __getitem__(self, idx: int):
         s_b = idx; s_e = s_b + self.seq_len
         r_b = s_e - self.label_len
@@ -420,17 +373,6 @@ class Dataset_PEMS(_BaseTS):
         self.data_x = df
         self.data_y = df
 
-    # def __getitem__(self, idx):
-    #     s_begin = idx
-    #     s_end = s_begin + self.seq_len
-    #     r_begin = s_end - self.label_len
-    #     r_end = r_begin + self.label_len + self.pred_len
-
-    #     seq_x = self.data_x[s_begin:s_end]
-    #     seq_y = self.data_y[r_begin:r_end]
-    #     seq_x_mark = np.zeros((seq_x.shape[0], 1))
-    #     seq_y_mark = np.zeros((seq_y.shape[0], 1))
-    #     return tuple(_to_tf(seq_x, seq_y, seq_x_mark, seq_y_mark))
     def __getitem__(self, idx: int):
         s_b, s_e = idx, idx + self.seq_len
         r_b = s_e - self.label_len
@@ -525,7 +467,7 @@ class Dataset_Solar(_BaseTS):
 
 
 class Dataset_Pred(_BaseTS):
-    """预测阶段专用：最后 label_len 作为 decoder 输入，pred_len 为输出步长"""
+    """Exclusive to the prediction stage: the last label_len is the decoder input, and pred_len is the output step."""
 
     def __init__(self, root_path, flag='pred', size=None,
                  features='S', data_path='ETTh1.csv',
@@ -606,18 +548,6 @@ class Dataset_Pred(_BaseTS):
     def __len__(self):
         return len(self.data_x) - self.seq_len + 1
 
-    # def __getitem__(self, idx):
-    #     s_begin = idx
-    #     s_end = s_begin + self.seq_len
-    #     r_begin = s_end - self.label_len       # 仅 label_len 作为 decoder 输入
-    #     r_end = r_begin + self.label_len + self.pred_len
-
-    #     seq_x = self.data_x[s_begin:s_end]
-    #     seq_y = self.data_y[r_begin:r_begin + self.label_len]
-    #     seq_x_mark = self.data_stamp[s_begin:s_end]
-    #     seq_y_mark = self.data_stamp[r_begin:r_end]
-
-    #     return tuple(_to_tf(seq_x, seq_y, seq_x_mark, seq_y_mark))
     def __getitem__(self, idx: int):
         s_b = idx
         s_e = s_b + self.seq_len
