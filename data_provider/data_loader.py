@@ -149,6 +149,9 @@ class Dataset_ETT_hour(_BaseTS):
         self.data_y = data[b1:b2]
         self.data_stamp = data_stamp
 
+    def inverse_transform(self, data):
+        return self.scaler.inverse_transform(data)
+
 
 class Dataset_ETT_minute(Dataset_ETT_hour):
     """分钟级（ETTm）— 仅覆盖不同的 freq 与边界切分。"""
@@ -281,6 +284,9 @@ class Dataset_Custom(_BaseTS):
         self.data_y = data[b1:b2]
         self.data_stamp = data_stamp
 
+    def inverse_transform(self, data):
+        return self.scaler.inverse_transform(data)
+
 
 class Dataset_Random(_BaseTS):
     def __init__(self, root_path, flag='train', size=None,
@@ -364,6 +370,9 @@ class Dataset_Random(_BaseTS):
         seq_x_mark = tf.zeros((self.seq_len, 4), dtype=tf.float32)
         seq_y_mark = tf.zeros((self.label_len + self.pred_len, 4), dtype=tf.float32)
         return seq_x, seq_y, seq_x_mark, seq_y_mark
+    
+    def inverse_transform(self, data):
+        return self.scaler.inverse_transform(data)
 
 
 class Dataset_PEMS(_BaseTS):
@@ -432,6 +441,9 @@ class Dataset_PEMS(_BaseTS):
         seq_x_mark = tf.zeros((self.seq_len, 1), dtype=tf.float32)
         seq_y_mark = tf.zeros((self.label_len + self.pred_len, 1), dtype=tf.float32)
         return seq_x, seq_y, seq_x_mark, seq_y_mark
+    
+    def inverse_transform(self, data):
+        return self.scaler.inverse_transform(data)
 
 
 
@@ -506,6 +518,9 @@ class Dataset_Solar(_BaseTS):
         seq_x_mark = tf.zeros((self.seq_len, 1), dtype=tf.float32)
         seq_y_mark = tf.zeros((self.label_len + self.pred_len, 1), dtype=tf.float32)
         return seq_x, seq_y, seq_x_mark, seq_y_mark
+    
+    def inverse_transform(self, data):
+        return self.scaler.inverse_transform(data)
 
 
 
@@ -610,7 +625,13 @@ class Dataset_Pred(_BaseTS):
         r_e = r_b + self.label_len + self.pred_len
 
         seq_x      = tf.constant(self.data_x[s_b:s_e], dtype=tf.float32)
-        seq_y      = tf.constant(self.data_y[r_b:r_b + self.label_len], dtype=tf.float32)
+        if self.inverse:
+            seq_y = tf.constant(self.data_x[r_b:r_b + self.label_len], dtype=tf.float32)
+        else:
+            seq_y      = tf.constant(self.data_y[r_b:r_b + self.label_len], dtype=tf.float32)
         seq_x_mark = tf.constant(self.data_stamp[s_b:s_e], dtype=tf.float32)
         seq_y_mark = tf.constant(self.data_stamp[r_b:r_e], dtype=tf.float32)
         return seq_x, seq_y, seq_x_mark, seq_y_mark
+    
+    def inverse_transform(self, data):
+        return self.scaler.inverse_transform(data)
