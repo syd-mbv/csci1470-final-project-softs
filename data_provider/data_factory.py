@@ -126,6 +126,7 @@ data_dict = {
     'random': Dataset_Random,
     'Solar':  Dataset_Solar,
     'PEMS':   Dataset_PEMS,
+    'M4': Dataset_Custom,
 }
 
 # def data_provider(args, flag):
@@ -248,6 +249,7 @@ def data_provider(args, flag):
 
     # ---------- 5) cache + prefetch ----------
     tf_dataset = full.cache().prefetch(tf.data.AUTOTUNE)
+    # tf_dataset = full.prefetch(tf.data.AUTOTUNE)
     options = tf.data.Options()
     options.experimental_distribute.auto_shard_policy = tf.data.experimental.AutoShardPolicy.DATA
     options.experimental_threading.private_threadpool_size = args.num_workers or tf.data.AUTOTUNE
