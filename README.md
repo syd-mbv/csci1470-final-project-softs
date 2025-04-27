@@ -235,3 +235,13 @@ if __name__ == "__main__":
     torch.multiprocessing.set_start_method("spawn", force=True)
     main()
 ```
+## Memo: Running on Oscar
+```
+interact -q gpu -g 1 -n 4 -t 02:00:00 -m 10g 
+module load miniconda3/23.11.0s
+source /oscar/runtime/software/external/miniconda3/23.11.0/etc/profile.d/conda.sh
+conda activate my_tfgpu
+nvidia-smi
+export LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH
+./scripts/long_term_forecast/PEMS/SOFTS_04.sh
+```
