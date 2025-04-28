@@ -72,7 +72,7 @@ def main():
     parser.add_argument('--gpu', type=int, default=0)
     parser.add_argument('--use_multi_gpu', action='store_true', default=False)
     parser.add_argument('--devices', type=str, default='0,1,2,3')
-    parser.add_argument('--save_model', action='store_true')
+    parser.add_argument('--save_model', action='store_true', default=True)
     args = parser.parse_args()
 
     # 4) TensorFlow GPU / 多 GPU 设置
@@ -111,7 +111,7 @@ def main():
         print(f">>>>>>> start training : {setting} >>>>>>>>>>")
         exp.train(setting)
         print(f">>>>>>> testing : {setting} <<<<<<<<")
-        exp.test(setting)
+        exp.test(setting, test=1)
 
     def test_only():
         setting = (
@@ -124,8 +124,8 @@ def main():
         #     exp = Exp(args)
         with strategy.scope():
             exp = Exp(args, strategy=strategy)
-        print(f">>>>>>> testing : {setting} <<<<<<<<")
-        exp.test(setting, test=1)
+            print(f">>>>>>> testing : {setting} <<<<<<<<")
+            exp.test(setting, test=1)
 
     # 6) 根据 is_training 决定
     if args.is_training:

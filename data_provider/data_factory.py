@@ -40,6 +40,12 @@ def data_provider(args, flag):
 
     sample = ds_obj[0]
 
+    # print(">>> DEBUG start")
+    # first = next(gen())           # 取一条样本
+    # for i, t in enumerate(first):
+    #     print(f"  element {i}: shape = {np.shape(t)}  rank = {np.ndim(t)}")
+    # print(">>> DEBUG end")
+
     def _flexible_shape(t):
         return tf.TensorSpec(shape=[None] * len(t.shape), dtype=tf.float32)
 
@@ -47,16 +53,15 @@ def data_provider(args, flag):
     #     tf.TensorSpec(shape=t.shape, dtype=tf.float32) for t in sample
     # )
     output_signature = tuple(_flexible_shape(t) for t in sample)
-
     full = tf.data.Dataset.from_generator(gen, output_signature=output_signature)
 
     # ---------- 4) shuffle / batch ----------
     if flag == 'train':
         full = full.shuffle(buffer_size=N, reshuffle_each_iteration=True)
 
-    drop_last = flag in ('train', 'test')
+    # drop_last = flag in ('train', 'test')
     bs        = 1 if flag == 'pred' else args.batch_size
-    full      = full.batch(bs, drop_remainder=drop_last)
+    full      = full.batch(bs, drop_remainder=False)
 
     # ---------- 5) cache + prefetch ----------
     tf_dataset = full.cache().prefetch(tf.data.AUTOTUNE)
