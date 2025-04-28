@@ -638,9 +638,25 @@ class Dataset_Pred(_BaseTS):
         if self.inverse:
             seq_y = tf.constant(self.data_x[r_b:r_b + self.label_len], dtype=tf.float32)
         else:
-            seq_y      = tf.constant(self.data_y[r_b:r_b + self.label_len], dtype=tf.float32)
+            seq_y = tf.constant(self.data_y[r_b:r_b + self.label_len], dtype=tf.float32)
         seq_x_mark = tf.constant(self.data_stamp[s_b:s_e], dtype=tf.float32)
         seq_y_mark = tf.constant(self.data_stamp[r_b:r_e], dtype=tf.float32)
+
+        def _ensure_rank2(t, name):
+            """rank==1 or rank>2: reshape --> (time, -1)"""
+            if t.ndim == 1:
+                tf.print("[Warn]", name, "rank=1  -> expand_dims")
+                t = tf.expand_dims(t, -1)                     # (T,) → (T,1)
+            elif t.ndim > 2:
+                tf.print("[Warn]", name, "rank", t.ndim, "-> reshape to rank=2")
+                t = tf.reshape(t, (t.shape[0], -1))           # (T, *, …) → (T, F)
+            return t
+
+        seq_x      = _ensure_rank2(seq_x,      "seq_x")
+        seq_y      = _ensure_rank2(seq_y,      "seq_y")
+        seq_x_mark = _ensure_rank2(seq_x_mark, "seq_x_mark")
+        seq_y_mark = _ensure_rank2(seq_y_mark, "seq_y_mark")
+
         return seq_x, seq_y, seq_x_mark, seq_y_mark
     
     def inverse_transform(self, data):

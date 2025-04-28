@@ -26,12 +26,15 @@ class Exp_Long_Term_Forecast(Exp_Basic):
                 self.model     = self._build_model()
                 self.optimizer = self._select_optimizer()
                 self.criterion = self._select_criterion()
-
+    
+    @staticmethod
+    def _ceil_steps(num_samples, batch_size):
+        return math.ceil(num_samples / batch_size)
+    
     def _build_model(self):
         return self.model_dict[self.args.model].Model(self.args)
 
     def _get_data(self, flag):
-        # 返回 (原始 dataset, tf.data.Dataset loader)
         return data_provider(self.args, flag)
 
     def _select_optimizer(self):
@@ -69,7 +72,10 @@ class Exp_Long_Term_Forecast(Exp_Basic):
             per_example_loss = self.criterion(targets, preds)
             replicas = (self.strategy.num_replicas_in_sync
                         if self.strategy is not None else 1)
-            global_bs = self.args.batch_size * replicas
+ 
+            # global_bs = self.args.batch_size * replicas
+            cur_bs      = tf.shape(bx)[0]
+            global_bs   = cur_bs * replicas
             loss = tf.nn.compute_average_loss(per_example_loss,
                                             global_batch_size=global_bs)
 
@@ -108,8 +114,8 @@ class Exp_Long_Term_Forecast(Exp_Basic):
 
         for batch in ds:
             bx, by, bxm, bym = batch
-            bx = tf.cast(bx, tf.float32)
-            by = tf.cast(by, tf.float32)
+            # bx = tf.cast(bx, tf.float32)
+            # by = tf.cast(by, tf.float32)
             if 'PEMS' in self.args.data or 'Solar' in self.args.data:
                 bxm = bym = None
             else:
@@ -157,8 +163,8 @@ class Exp_Long_Term_Forecast(Exp_Basic):
                 iter_count += 1
 
                 bx, by, bxm, bym = batch
-                bx = tf.cast(bx, tf.float32)
-                by = tf.cast(by, tf.float32)
+                # bx = tf.cast(bx, tf.float32)
+                # by = tf.cast(by, tf.float32)
                 if 'PEMS' in self.args.data or 'Solar' in self.args.data:
                     bxm = bym = None
                 else:
@@ -218,6 +224,9 @@ class Exp_Long_Term_Forecast(Exp_Basic):
 
     def test(self, setting, test=0):
         _, test_loader = self._get_data('test')
+        if self.strategy:
+            test_loader = self.strategy.experimental_distribute_dataset(test_loader)
+
         if test:
             ckpt = os.path.join(self.args.checkpoints, setting, 'checkpoint.h5')
             print('loading model from', ckpt)
@@ -231,8 +240,8 @@ class Exp_Long_Term_Forecast(Exp_Basic):
         self.model.trainable = False
         for batch in test_loader:
             batch_x, batch_y, batch_x_mark, batch_y_mark = batch
-            batch_x = tf.cast(batch_x, tf.float32)
-            batch_y = tf.cast(batch_y, tf.float32)
+            # batch_x = tf.cast(batch_x, tf.float32)
+            # batch_y = tf.cast(batch_y, tf.float32)
 
             if 'PEMS' in self.args.data or 'Solar' in self.args.data:
                 batch_x_mark = None
