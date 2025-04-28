@@ -124,8 +124,8 @@ def main():
         #     exp = Exp(args)
         with strategy.scope():
             exp = Exp(args, strategy=strategy)
-        print(f">>>>>>> testing : {setting} <<<<<<<<")
-        exp.test(setting, test=1)
+            print(f">>>>>>> testing : {setting} <<<<<<<<")
+            exp.test(setting, test=1)
 
     # 6) 根据 is_training 决定
     if args.is_training:
