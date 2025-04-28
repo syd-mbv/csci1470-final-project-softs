@@ -90,6 +90,10 @@ pip install scikit-learn==1.2.2 pandas==2.2.3
 |  | 24 | 0.0960| 0.2035 |
 |  | 48 | 0.1236 | 0.2341 |
 |  | 96 | 0.1879 | 0.2989 |
+| PEMS04 | 12 | 0.0841 | 0.1934 |
+|  | 24 | 0.0960| 0.2035 |
+|  | 48 | 0.1236 | 0.2341 |
+|  | 96 | 0.1879 | 0.2989 |
 
 
 ## Appendix A: How to run the original SOFTS (PyTorch) in Windows?
