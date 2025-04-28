@@ -661,3 +661,109 @@ class Dataset_Pred(_BaseTS):
     
     def inverse_transform(self, data):
         return self.scaler.inverse_transform(data)
+
+class Dataset_DailySofts(_BaseTS):
+    """专门用于处理daily_softs_ready.csv数据集的类"""
+    
+    def __init__(
+        self, root_path, flag="train", size=None,
+        features="M", data_path="daily_softs_ready.csv",
+        target="series_0", scale=True, timeenc=0, freq="d", seasonal_patterns=None
+    ):
+        # 设置默认序列长度和预测长度
+        if size is None:
+            self.seq_len = 96
+            self.label_len = 48
+            self.pred_len = 96
+        else:
+            self.seq_len = size[0]
+            self.label_len = size[1]
+            self.pred_len = size[2]
+
+        self.features = features
+        self.target = target
+        self.scale = scale
+        self.timeenc = timeenc
+        self.freq = freq
+
+        self.root_path = root_path
+        self.data_path = data_path
+        self.set_type = {"train": 0, "val": 1, "test": 2}[flag]
+        self.__read_data__()
+
+    def __read_data__(self):
+        self.scaler = StandardScaler()
+        df_raw = pd.read_csv(os.path.join(self.root_path, self.data_path))
+        
+        # 处理时间戳列
+        if 'timestamp' in df_raw.columns:
+            date_col = 'timestamp'
+        elif 'date' in df_raw.columns:
+            date_col = 'date'
+        else:
+            print("警告：未找到时间戳列，使用索引作为时间")
+            df_raw['date'] = pd.date_range(start='2020-01-01', periods=len(df_raw), freq='D')
+            date_col = 'date'
+        
+        # 获取所有数值列（除时间戳列外）
+        feature_cols = [col for col in df_raw.columns if col != date_col]
+        
+        # 数据拆分
+        train_ratio = 0.7
+        test_ratio = 0.2
+        
+        num_samples = len(df_raw)
+        num_train = int(num_samples * train_ratio)
+        num_test = int(num_samples * test_ratio)
+        num_val = num_samples - num_train - num_test
+        
+        border1s = [0, num_train - self.seq_len, len(df_raw) - num_test - self.seq_len]
+        border2s = [num_train, num_train + num_val, len(df_raw)]
+        border1, border2 = border1s[self.set_type], border2s[self.set_type]
+        
+        # 选择特征
+        if self.features == 'M' or self.features == 'MS':
+            # 多变量预测 - 使用所有数值列
+            df_data = df_raw[feature_cols]
+        else:
+            # 单变量预测（仅使用目标列）
+            df_data = df_raw[[self.target]]
+        
+        # 标准化
+        if self.scale:
+            train_data = df_data.values[border1s[0]:border2s[0]]
+            self.scaler.fit(train_data)
+            data = self.scaler.transform(df_data.values)
+        else:
+            data = df_data.values
+        
+        # 处理时间特征
+        # temp_dates = df_raw[date_col].iloc[border1:border2].values
+        try:
+            # 尝试转换为日期时间格式
+            date_array = pd.to_datetime(df_raw[date_col].values[border1:border2])
+            
+            if self.timeenc == 0:
+                # 手动时间特征编码
+                df_stamp = pd.DataFrame()
+                df_stamp['month'] = date_array.month
+                df_stamp['day'] = date_array.day
+                df_stamp['weekday'] = date_array.weekday
+                df_stamp['hour'] = 0  # 对于每日数据，小时总是0
+                data_stamp = df_stamp.values
+            else:
+                # 使用time_features函数进行编码
+                data_stamp = time_features(date_array, freq=self.freq)
+                data_stamp = data_stamp.transpose(1, 0)
+                
+        except Exception as e:
+            print(f"时间特征处理错误: {e}")
+            print("使用默认时间特征")
+            # 使用简单的序列索引作为时间特征
+            seq_length = border2 - border1
+            data_stamp = np.zeros((seq_length, 4))
+        
+        # 设置数据
+        self.data_x = data[border1:border2]
+        self.data_y = data[border1:border2]
+        self.data_stamp = data_stamp

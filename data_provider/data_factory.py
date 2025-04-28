@@ -3,7 +3,7 @@ import numpy as np
 from data_provider.data_loader import (
     Dataset_ETT_hour, Dataset_ETT_minute, Dataset_Custom,
     Dataset_Solar, Dataset_PEMS, Dataset_Pred, Dataset_Random,
-    Dataset_M4
+    Dataset_M4, Dataset_DailySofts
 )
 
 data_dict = {
@@ -15,7 +15,7 @@ data_dict = {
     'random': Dataset_Random,
     'Solar':  Dataset_Solar,
     'PEMS':   Dataset_PEMS,
-    'M4': Dataset_M4,
+    'daily_softs': Dataset_DailySofts,
 }
 
 def data_provider(args, flag):
