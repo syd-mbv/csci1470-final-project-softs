@@ -67,19 +67,22 @@ class Exp_Long_Term_Forecast(Exp_Basic):
             f_dim = -1 if self.args.features == 'MS' else 0
             preds = outputs[:, -self.args.pred_len:, f_dim:]
             targets = by[:, -self.args.pred_len:, f_dim:]
-            # loss = self.criterion(targets, preds)
-            # loss = tf.reduce_mean(loss)
+
             per_example_loss = self.criterion(targets, preds)
             replicas = (self.strategy.num_replicas_in_sync
                         if self.strategy is not None else 1)
  
-            # global_bs = self.args.batch_size * replicas
             cur_bs      = tf.shape(bx)[0]
             global_bs   = cur_bs * replicas
-            loss = tf.nn.compute_average_loss(per_example_loss,
-                                            global_batch_size=global_bs)
+            # loss = tf.nn.compute_average_loss(per_example_loss,
+            #                                 global_batch_size=global_bs)
+            per_loss = self.criterion(targets, preds)
+            loss = (tf.nn.compute_average_loss(per_loss,
+                 global_batch_size=global_bs) if self.strategy
+                else tf.reduce_mean(per_loss))
 
         grads = tape.gradient(loss, self.model.trainable_variables)
+        grads = [tf.clip_by_norm(g, 1.0) for g in grads]
         self.optimizer.apply_gradients(zip(grads, self.model.trainable_variables))
         return loss
     
@@ -222,6 +225,54 @@ class Exp_Long_Term_Forecast(Exp_Basic):
 
         return self.model
 
+    # def test(self, setting, test=0):
+    #     _, test_loader = self._get_data('test')
+    #     if self.strategy:
+    #         test_loader = self.strategy.experimental_distribute_dataset(test_loader)
+
+    #     if test:
+    #         ckpt = os.path.join(self.args.checkpoints, setting, 'checkpoint.h5')
+    #         print('loading model from', ckpt)
+    #         self.model.load_weights(ckpt)
+
+    #     mse_loss = tf.keras.losses.MeanSquaredError()
+    #     mae_loss = tf.keras.losses.MeanAbsoluteError()
+    #     mse = AverageMeter()
+    #     mae = AverageMeter()
+
+    #     self.model.trainable = False
+    #     for batch in test_loader:
+    #         batch_x, batch_y, batch_x_mark, batch_y_mark = batch
+    #         # batch_x = tf.cast(batch_x, tf.float32)
+    #         # batch_y = tf.cast(batch_y, tf.float32)
+
+    #         if 'PEMS' in self.args.data or 'Solar' in self.args.data:
+    #             batch_x_mark = None
+    #             batch_y_mark = None
+    #         else:
+    #             batch_x_mark = tf.cast(batch_x_mark, tf.float32)
+    #             batch_y_mark = tf.cast(batch_y_mark, tf.float32)
+
+    #         zeros = tf.zeros_like(batch_y[:, -self.args.pred_len:, :])
+    #         dec_inp = tf.concat([batch_y[:, :self.args.label_len, :], zeros], axis=1)
+
+    #         outputs = self.model(
+    #             batch_x, batch_x_mark, dec_inp, batch_y_mark,
+    #             training=False
+    #         )
+    #         if self.args.output_attention:
+    #             outputs = outputs[0]
+
+    #         f_dim = -1 if self.args.features == 'MS' else 0
+    #         outputs = outputs[:, -self.args.pred_len:, f_dim:]
+    #         batch_y_cut = batch_y[:, -self.args.pred_len:, f_dim:]
+
+    #         batch_size = int(batch_x.shape[0])
+    #         mse.update(mse_loss(batch_y_cut, outputs).numpy(), batch_size)
+    #         mae.update(mae_loss(batch_y_cut, outputs).numpy(), batch_size)
+
+    #     print(f'mse:{mse.avg}, mae:{mae.avg}')
+    #     return
     def test(self, setting, test=0):
         _, test_loader = self._get_data('test')
         if self.strategy:
@@ -232,41 +283,54 @@ class Exp_Long_Term_Forecast(Exp_Basic):
             print('loading model from', ckpt)
             self.model.load_weights(ckpt)
 
-        mse_loss = tf.keras.losses.MeanSquaredError()
-        mae_loss = tf.keras.losses.MeanAbsoluteError()
-        mse = AverageMeter()
-        mae = AverageMeter()
+        mse_metric = tf.keras.metrics.Mean()
+        mae_metric = tf.keras.metrics.Mean()
 
+        @tf.function
+        def _test_step(bx, by, bxm, bym):
+            # 与 _val_step 同一套前处理
+            if bxm is None:
+                x_mark, y_mark = None, None
+            else:
+                x_mark = tf.cast(bxm, tf.float32)
+                y_mark = tf.cast(bym, tf.float32)
+
+            dec_inp = tf.zeros_like(by[:, -self.args.pred_len:, :])
+            dec_inp = tf.concat([by[:, :self.args.label_len, :], dec_inp], axis=1)
+
+            if self.args.output_attention:
+                outputs, _ = self.model(bx, x_mark, dec_inp, y_mark, training=False)
+            else:
+                outputs = self.model(bx, x_mark, dec_inp, y_mark, training=False)
+
+            f_dim   = -1 if self.args.features == 'MS' else 0
+            preds   = outputs[:, -self.args.pred_len:, f_dim:]      # (B,L,F) 或 (B,L)
+            targets =     by[:, -self.args.pred_len:, f_dim:]
+
+            # 逐元素误差
+            mse_val = tf.reduce_mean(tf.math.squared_difference(targets, preds))
+            mae_val = tf.reduce_mean(tf.math.abs(targets - preds))
+            return mse_val, mae_val    # 两个标量
+        
         self.model.trainable = False
         for batch in test_loader:
-            batch_x, batch_y, batch_x_mark, batch_y_mark = batch
-            # batch_x = tf.cast(batch_x, tf.float32)
-            # batch_y = tf.cast(batch_y, tf.float32)
-
-            if 'PEMS' in self.args.data or 'Solar' in self.args.data:
-                batch_x_mark = None
-                batch_y_mark = None
+            bx, by, bxm, bym = batch
+            if self.args.data in ('PEMS', 'Solar'):
+                bxm = bym = None
             else:
-                batch_x_mark = tf.cast(batch_x_mark, tf.float32)
-                batch_y_mark = tf.cast(batch_y_mark, tf.float32)
+                bxm = tf.cast(bxm, tf.float32)
+                bym = tf.cast(bym, tf.float32)
 
-            zeros = tf.zeros_like(batch_y[:, -self.args.pred_len:, :])
-            dec_inp = tf.concat([batch_y[:, :self.args.label_len, :], zeros], axis=1)
+            # 分布式或单卡统一处理
+            if self.strategy:
+                mse_rep, mae_rep = self.strategy.run(_test_step, args=(bx, by, bxm, bym))
+                mse_val = self.strategy.reduce(tf.distribute.ReduceOp.MEAN, mse_rep, axis=None)
+                mae_val = self.strategy.reduce(tf.distribute.ReduceOp.MEAN, mae_rep, axis=None)
+            else:
+                mse_val, mae_val = _test_step(bx, by, bxm, bym)
 
-            outputs = self.model(
-                batch_x, batch_x_mark, dec_inp, batch_y_mark,
-                training=False
-            )
-            if self.args.output_attention:
-                outputs = outputs[0]
+            mse_metric.update_state(mse_val)
+            mae_metric.update_state(mae_val)
 
-            f_dim = -1 if self.args.features == 'MS' else 0
-            outputs = outputs[:, -self.args.pred_len:, f_dim:]
-            batch_y_cut = batch_y[:, -self.args.pred_len:, f_dim:]
-
-            batch_size = int(batch_x.shape[0])
-            mse.update(mse_loss(batch_y_cut, outputs).numpy(), batch_size)
-            mae.update(mae_loss(batch_y_cut, outputs).numpy(), batch_size)
-
-        print(f'mse:{mse.avg}, mae:{mae.avg}')
+        print(f"mse: {mse_metric.result().numpy():.6f}, " f"mae: {mae_metric.result().numpy():.6f}")
         return

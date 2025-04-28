@@ -108,10 +108,10 @@ def main():
         #     exp = Exp(args)
         with strategy.scope():
             exp = Exp(args, strategy=strategy)
-        print(f">>>>>>> start training : {setting} >>>>>>>>>>")
-        exp.train(setting)
-        print(f">>>>>>> testing : {setting} <<<<<<<<")
-        exp.test(setting, test=1)
+            print(f">>>>>>> start training : {setting} >>>>>>>>>>")
+            exp.train(setting)
+            print(f">>>>>>> testing : {setting} <<<<<<<<")
+            exp.test(setting, test=1)
 
     def test_only():
         setting = (
