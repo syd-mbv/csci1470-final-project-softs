@@ -1,5 +1,7 @@
 # Project Title
-SOFTS
+**SOFTS**
+
+Reimplementation of *SOFTS: Efficient Multivariate Time Series Forecasting with Series-Core Fusion* (NeurIPS 2024).
 
 ## Introduction
   - Objectives: Effectively integrating the robustness of channel independence and utilizing the correlation between channels in a simpler and more efficient manner is crucial for building better time series forecasting models.
@@ -12,15 +14,17 @@ SOFTS
 ## Challenges
   - Re-implement the system in TensorFlow framework instead of PyTorch. 
   - Simple ```Dataloader``` in PyTorch must be implemented manually using TensorFlow.
-  - 
+  - The Data pipeline is tricky to build.
+  - Some OS operations need to consider different scenarios for Linux and Windows.
+  - New Dataset Class is needed for new datasets.
 ## Insights
 Are there any concrete results you can show at this point?
 How is your model performing compared with expectations?
  - We have built the entire system in the tensorflow framework.
  - Successfully completed most of the experiments in the paper, completed training and testing on the datasets mentioned in the paper and collected results.
- - 
- - The Data pipeline is tricky to build.
- - Some OS operations need to consider different scenarios for Linux and Windows.
+ - Achieved the inference speed that is nearly identical to the code in the paper, replicating the complexity advantages of the SOFTS model.
+ - Overall, the MSE/MAE obtained on the various datasets and reported in the paper are generally close.
+
 ## Plan
 Are you on track with your project?
 What do you need to dedicate more time to?
