@@ -79,7 +79,7 @@ def main():
     gpus = tf.config.list_physical_devices('GPU')
     args.use_gpu = bool(gpus) and args.use_gpu
     if args.use_gpu and args.use_multi_gpu:
-        # 指定哪些 GPU 可见，并用 MirroredStrategy
+ 
         device_ids = [int(x) for x in args.devices.split(',') if x.strip().isdigit()]
         chosen = [gpus[i] for i in device_ids]
         tf.config.set_visible_devices(chosen, 'GPU')

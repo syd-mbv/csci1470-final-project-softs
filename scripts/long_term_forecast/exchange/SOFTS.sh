@@ -16,10 +16,10 @@ python -u run.py \
   --dec_in 8 \
   --c_out 8 \
   --d_model 128 \
-  --d_core 128 \
+  --d_core 64 \
   --d_ff 128 \
   --batch_size 16 \
-  --learning_rate 0.0001 \
+  --learning_rate 0.00003 \
   --train_epochs 30 \
   --patience 15 \
   --lradj cosine \
@@ -42,10 +42,10 @@ python -u run.py \
   --dec_in 8 \
   --c_out 8 \
   --d_model 128 \
-  --d_core 128 \
+  --d_core 64 \
   --d_ff 128 \
   --batch_size 16 \
-  --learning_rate 0.0001 \
+  --learning_rate 0.00003 \
   --train_epochs 30 \
   --patience 15 \
   --lradj cosine \
@@ -68,10 +68,10 @@ python -u run.py \
   --dec_in 8 \
   --c_out 8 \
   --d_model 128 \
-  --d_core 128 \
+  --d_core 64 \
   --d_ff 128 \
   --batch_size 16 \
-  --learning_rate 0.0001 \
+  --learning_rate 0.00003 \
   --train_epochs 30 \
   --patience 15 \
   --lradj cosine \
@@ -94,10 +94,10 @@ python -u run.py \
   --dec_in 8 \
   --c_out 8 \
   --d_model 128 \
-  --d_core 128 \
+  --d_core 64 \
   --d_ff 128 \
   --batch_size 16 \
-  --learning_rate 0.0001 \
+  --learning_rate 0.00003 \
   --train_epochs 30 \
   --patience 15 \
   --lradj cosine \
