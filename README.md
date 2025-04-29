@@ -46,6 +46,7 @@ pip install scikit-learn==1.2.2 pandas==2.2.3
 ```
 
 ## Our Results (TensorFlow)
+**Original Datasets:**
 | Dataset | Models Metric | MSE | MAE |
 |:------:|:--------:|:-----:|:------:|
 | ECL | 96 | 0.152 | 0.239 |
@@ -108,6 +109,15 @@ pip install scikit-learn==1.2.2 pandas==2.2.3
 |  | 48 | 0.1653 | 0.2501 |
 |  | 96 | 0.2148 | 0.2581 |
 |  | Avg|   0.1410   |  0.2224    |
+
+**New Datasets:**
+| Dataset | Models Metric | MSE | MAE |
+|:------:|:--------:|:-----:|:------:|
+| Exchange | 96 | 0.086 | 0.206 |
+|  | 192 | 0.181 | 0.303 |
+|  | 336 | 0.325 | 0.413 |
+|  | 720 | 0.842 | 0.691 |
+|  | Avg | 0.359 | 0.403 |
 
 
 ## Appendix A: How to run the original SOFTS (PyTorch) in Windows?
