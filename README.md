@@ -2,15 +2,28 @@
 Final project for Brown CSCI1470 Deep Learning
 
 ## Introduction
+Reimplementation of *SOFTS: Efficient Multivariate Time Series Forecasting with Series-Core Fusion* (NeurIPS 2024), in **TensorFlow**. 
+
+### Main Structure
+   
+![structure](imgs/structure.png)
+   
+#### Star Aggregate-Redistribute Module (STAR)
+   
+![STAR](imgs/STAR.png)
 
 ## Dataset
 
+You can directly download the datasets used in the paper from [Google Drive](https://drive.google.com/file/d/1l51QsKvQPcqILT3DwfjCgx8Dsg2rpjot/view?usp=drive_link). 
 
-## Re-implement *SOFTS* (Original: PyTorch)
+Once downloaded, place the datasets under folder `dataset/`, like `dataset/ETT-small`, `dataset/traffic`, etc.
+
+## Original *SOFTS* (Original: PyTorch)
 ```
+# ref: https://github.com/Secilia-Cxy/SOFTS/tree/main
 conda create -n [env_name] python=3.8
 conda activate [env_name]
-#ref :https://pytorch.org/get-started/previous-versions/#v1100
+# ref: https://pytorch.org/get-started/previous-versions/#v1100
 conda install pytorch==1.10.0 torchvision==0.11.0 torchaudio==0.10.0 cudatoolkit=11.1 -c pytorch -c conda-forge
 
 pip install scikit-learn==1.2.2 numpy==1.22.4 pandas==1.2.4
@@ -30,7 +43,6 @@ To run the script files in **Windows**, see **Appendix A**.
 
 ## Re-implement *SOFTS* (Our: TensorFlow)
 ```
-# Windows:
 conda create -n [env_name] python=3.10 -y
 conda activate [env_name]
 
@@ -45,7 +57,7 @@ pip install scikit-learn==1.2.2 pandas==2.2.3
 # git clone https://github.com/syd-mbv/csci1470-final-project-softs.git
 ```
 
-## Our Results (TensorFlow)
+## Main Results (TensorFlow)
 **Original Datasets:**
 | Dataset | Models Metric | MSE | MAE |
 |:------:|:--------:|:-----:|:------:|
@@ -122,6 +134,18 @@ pip install scikit-learn==1.2.2 pandas==2.2.3
 |  | 192 | 0.492334 | 0.114570 |
 |  | 336 | 2.233767 | 0.419027 |
 |  | Avg | 0.967449 | 0.194223 |
+
+
+## Memo: Running on Oscar
+```
+interact -q gpu -g 1 -n 4 -t 02:00:00 -m 10g 
+module load miniconda3/23.11.0s
+source /oscar/runtime/software/external/miniconda3/23.11.0/etc/profile.d/conda.sh
+conda activate my_tfgpu
+nvidia-smi
+export LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH
+./scripts/long_term_forecast/PEMS/SOFTS_04.sh
+```
 
 
 ## Appendix A: How to run the original SOFTS (PyTorch) in Windows?
@@ -277,13 +301,22 @@ if __name__ == "__main__":
     torch.multiprocessing.set_start_method("spawn", force=True)
     main()
 ```
-## Memo: Running on Oscar
-```
-interact -q gpu -g 1 -n 4 -t 02:00:00 -m 10g 
-module load miniconda3/23.11.0s
-source /oscar/runtime/software/external/miniconda3/23.11.0/etc/profile.d/conda.sh
-conda activate my_tfgpu
-nvidia-smi
-export LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH
-./scripts/long_term_forecast/PEMS/SOFTS_04.sh
+
+
+## Reference
+We appreciate the following github repos a lot for their valuable code base or datasets:
+
+https://github.com/Secilia-Cxy/SOFTS/tree/main
+https://github.com/thuml/Time-Series-Library
+https://github.com/thuml/iTransformer
+https://github.com/zhouhaoyi/ETDataset
+
+The repository is based on [SOFTS](https://github.com/Secilia-Cxy/SOFTS/tree/main).
+```markdown
+@article{han2024softs,
+  title={SOFTS: Efficient Multivariate Time Series Forecasting with Series-Core Fusion},
+  author={Han, Lu and Chen, Xu-Yang and Ye, Han-Jia and Zhan, De-Chuan},
+  journal={arXiv preprint arXiv:2404.14197},
+  year={2024}
+}
 ```

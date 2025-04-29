@@ -127,12 +127,11 @@ Reimplementation of *SOFTS: Efficient Multivariate Time Series Forecasting with 
 
 - **Tianxi Lu:**
   - Implement data preprocessing pipeline for all datasets
-  - Set up training and evaluation framework
-  - Conduct ablation studies on pooling methods
+  - Complete the virtual environment build based on Oscar
   - Analyze and visualize results
+  - Design and run experiments for model performance comparison
 
 - **Yinan Zhai:**
-  - Implement the series embedding and linear predictor components
-  - Test model robustness against channel noise
-  - Design experiments for varying lookback window lengths
+  - Preparing additional data sets
+  - Complete data cleansing and preparation
   - Create documentation and prepare final presentation
