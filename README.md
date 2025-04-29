@@ -315,6 +315,7 @@ https://github.com/thuml/iTransformer
 https://github.com/zhouhaoyi/ETDataset
 
 The repository is based on [SOFTS](https://github.com/Secilia-Cxy/SOFTS/tree/main).
+
 ```markdown
 @article{han2024softs,
   title={SOFTS: Efficient Multivariate Time Series Forecasting with Series-Core Fusion},
