@@ -118,6 +118,10 @@ pip install scikit-learn==1.2.2 pandas==2.2.3
 |  | 336 | 0.325 | 0.413 |
 |  | 720 | 0.842 | 0.691 |
 |  | Avg | 0.359 | 0.403 |
+| M4_daily | 32 | 0.176245 | 0.049073 |
+|  | 192 | 0.492334 | 0.114570 |
+|  | 336 | 2.233767 | 0.419027 |
+|  | Avg | 0.967449 | 0.194223 |
 
 
 ## Appendix A: How to run the original SOFTS (PyTorch) in Windows?
