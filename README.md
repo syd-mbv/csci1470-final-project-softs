@@ -307,8 +307,11 @@ if __name__ == "__main__":
 We appreciate the following github repos a lot for their valuable code base or datasets:
 
 https://github.com/Secilia-Cxy/SOFTS/tree/main
+
 https://github.com/thuml/Time-Series-Library
+
 https://github.com/thuml/iTransformer
+
 https://github.com/zhouhaoyi/ETDataset
 
 The repository is based on [SOFTS](https://github.com/Secilia-Cxy/SOFTS/tree/main).
