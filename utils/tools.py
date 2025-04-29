@@ -93,7 +93,7 @@ class EarlyStopping:
         if self.verbose:
             print(
                 f'Validation loss decreased '
-                f'({self.val_loss_min:.6f} → {val_loss:.6f}).  Saving model ...'
+                f'({self.val_loss_min:.6f} -> {val_loss:.6f}).  Saving model ...'
             )
         os.makedirs(path, exist_ok=True)
         # 保存 TensorFlow 模型权重

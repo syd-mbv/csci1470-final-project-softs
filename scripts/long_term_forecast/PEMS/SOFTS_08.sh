@@ -21,7 +21,7 @@ python -u run.py \
   --learning_rate 0.0003 \
   --lradj cosine \
   --train_epochs 30 \
-  --patience 3 \
+  --patience 10 \
   --use_norm 1 \
   --itr 1
 
@@ -46,7 +46,7 @@ python -u run.py \
   --learning_rate 0.0003 \
   --lradj cosine \
   --train_epochs 30 \
-  --patience 3 \
+  --patience 10 \
   --use_norm 1 \
   --itr 1
 
@@ -72,7 +72,7 @@ python -u run.py \
   --learning_rate 0.0003 \
   --lradj cosine \
   --train_epochs 30 \
-  --patience 3 \
+  --patience 10 \
   --use_norm 1 \
   --itr 1
 
@@ -98,6 +98,6 @@ python -u run.py \
   --learning_rate 0.0003 \
   --lradj cosine \
   --train_epochs 30 \
-  --patience 3 \
+  --patience 10 \
   --use_norm 0 \
   --itr 1

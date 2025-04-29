@@ -3,12 +3,12 @@ model_name=SOFTS
 log_dir="./logs"
 mkdir -p $log_dir
 
-# 短期预测 (约3个月)
+# 短期预测 (约1个月)
 python -u run.py \
   --is_training 1 \
   --root_path ./dataset/my_data/ \
   --data_path daily_softs_ready.csv \
-  --model_id daily_softs_96_96 \
+  --model_id daily_softs_96_32 \
   --model $model_name \
   --data daily_softs \
   --features M \
@@ -30,7 +30,7 @@ python -u run.py \
   --lradj cosine \
   --use_norm 1 \
   --freq d \
-  --itr 1 2>&1 | tee "$log_dir/daily_softs_pred96_$(date +%Y%m%d_%H%M%S).log"
+  --itr 1 2>&1 | tee "$log_dir/daily_softs_pred32_$(date +%Y%m%d_%H%M%S).log"
 
 # 中期预测 (约6个月)
 python -u run.py \

@@ -31,6 +31,20 @@ class Exp_Long_Term_Forecast(Exp_Basic):
     def _ceil_steps(num_samples, batch_size):
         return math.ceil(num_samples / batch_size)
     
+    @staticmethod
+    def _smape(y_true, y_pred, eps=1e-6):
+        num = tf.abs(y_pred - y_true)
+        den = (tf.abs(y_true) + tf.abs(y_pred)) / 2.0 + eps
+        return tf.reduce_mean(num / den)
+
+    @staticmethod
+    def _mase(y_true, y_pred, seasonal_diff, eps=1e-6):
+        """y_* 形状 (B, L, F) 或 (L,)；seasonal_diff 同形状"""
+        mae_pred = tf.reduce_mean(tf.abs(y_true - y_pred))
+        mae_naive = tf.reduce_mean(tf.abs(seasonal_diff)) + eps
+        return mae_pred / mae_naive
+
+    
     def _build_model(self):
         return self.model_dict[self.args.model].Model(self.args)
 
@@ -285,7 +299,10 @@ class Exp_Long_Term_Forecast(Exp_Basic):
 
         mse_metric = tf.keras.metrics.Mean()
         mae_metric = tf.keras.metrics.Mean()
+        # smape_metric = tf.keras.metrics.Mean()
+        # mase_metric  = tf.keras.metrics.Mean()
 
+        # m = getattr(self.args, 'seasonal', 1)
         @tf.function
         def _test_step(bx, by, bxm, bym):
             # 与 _val_step 同一套前处理
@@ -307,12 +324,29 @@ class Exp_Long_Term_Forecast(Exp_Basic):
             preds   = outputs[:, -self.args.pred_len:, f_dim:]      # (B,L,F) 或 (B,L)
             targets =     by[:, -self.args.pred_len:, f_dim:]
 
-            # 逐元素误差
+            # # naive predict
+            # naive_targets = by[:, -(self.args.pred_len+m):-m if m>0 else None, f_dim:]
+            # naive_preds = tf.identity(naive_targets)
+
+            # per sample
             mse_val = tf.reduce_mean(tf.math.squared_difference(targets, preds))
             mae_val = tf.reduce_mean(tf.math.abs(targets - preds))
-            return mse_val, mae_val    # 两个标量
+
+            return mse_val, mae_val
+
+            # smape = self._smape(targets, preds)
+            # seasonal_diff = targets - naive_targets
+            # mase  = self._mase(targets, preds, seasonal_diff)
+
+            # smape_naive = self._smape(targets, naive_preds)
+            # mase_naive  = self._mase(targets, naive_preds, seasonal_diff)
+
+            # owa = 0.5 * (smape / smape_naive) + 0.5 * (mase / mase_naive)
+
+            # return mse_val, mae_val, smape, mase, owa
         
         self.model.trainable = False
+        # owa_metric = tf.keras.metrics.Mean()
         for batch in test_loader:
             bx, by, bxm, bym = batch
             if self.args.data in ('PEMS', 'Solar'):
@@ -324,10 +358,16 @@ class Exp_Long_Term_Forecast(Exp_Basic):
             # 分布式或单卡统一处理
             if self.strategy:
                 mse_rep, mae_rep = self.strategy.run(_test_step, args=(bx, by, bxm, bym))
+                # mse_rep, mae_rep, smape_rep, mase_rep, owa_rep = \
+                    # self.strategy.run(_test_step, args=(bx, by, bxm, bym))
                 mse_val = self.strategy.reduce(tf.distribute.ReduceOp.MEAN, mse_rep, axis=None)
                 mae_val = self.strategy.reduce(tf.distribute.ReduceOp.MEAN, mae_rep, axis=None)
+                # smape_val = self.strategy.reduce(tf.distribute.ReduceOp.MEAN, smape_rep, axis=None)
+                # mase_val = self.strategy.reduce(tf.distribute.ReduceOp.MEAN, mase_rep, axis=None)
+                # owa_val = self.strategy.reduce(tf.distribute.ReduceOp.MEAN, owa_rep, axis=None)
             else:
                 mse_val, mae_val = _test_step(bx, by, bxm, bym)
+                # mse_val, mae_val, smape_val, mase_val, owa_val = _test_step(bx, by, bxm, bym)
 
             mse_metric.update_state(mse_val)
             mae_metric.update_state(mae_val)
